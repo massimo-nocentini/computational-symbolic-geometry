@@ -1,0 +1,455 @@
+mn@mn-toshiba:~/Developer/working-copies/uni/hol_light$ ./dmtcp_restart_script.sh 
+dmtcp_checkpoint (DMTCP + MTCP) 1.2.5
+Copyright (C) 2006-2011  Jason Ansel, Michael Rieker, Kapil Arya, and
+                                                       Gene Cooperman
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions; see COPYING file for details.
+(Use flag "-q" to hide this message.)
+
+dmtcp_coordinator starting...
+    Port: 7779
+    Checkpoint Interval: disabled (checkpoint manually instead)
+    Exit on last client: 1
+Backgrounding...
+define;;
+define;;
+val it : term -> thm = <fun>
+# AC;;
+AC;;
+val it : thm -> term -> thm = <fun>
+# CONJ;;
+CONJ;;
+val it : thm -> thm -> thm = <fun>
+# GENL;;
+GENL;;
+val it : term list -> thm -> thm = <fun>
+# GENALL;;
+GENALL;;
+# GENALL;;
+Error: Unbound value GENALL
+# GEN_ALL;;
+GEN_ALL;;
+val it : thm -> thm = <fun>
+# GSYM;;
+GSYM;;
+val it : thm -> thm = <fun>
+# help "GSYM";;
+help "GSYM";;
+-------------------------------------------------------------------
+
+GSYM : thm -> thm
+
+SYNOPSIS
+
+Reverses the first equation(s) encountered in a top-down search.
+
+DESCRIPTION
+
+The inference rule GSYM reverses the first equation(s) encountered in a
+top-down search of the conclusion of the argument theorem. An equation will be
+reversed iff it is not a proper subterm of another equation. If a theorem
+contains no equations, it will be returned unchanged.
+
+    A |- ..(s1 = s2)...(t1 = t2)..
+   --------------------------------  GSYM
+    A |- ..(s2 = s1)...(t2 = t1)..
+
+FAILURE CONDITIONS
+
+Never fails, and never loops infinitely.
+
+EXAMPLES
+
+
+  # ADD;;
+  val it : thm = |- (!n. 0 + n = n) /\ (!m n. SUC m + n = SUC (m + n))
+
+  # GSYM ADD;;
+  val it : thm = |- (!n. n = 0 + n) /\ (!m n. SUC (m + n) = SUC m + n)
+
+SEE ALSO
+NOT_EQ_SYM, REFL, SYM.
+
+--------------------------------------------------------------------
+val it : unit = ()
+# #use "gcs/cap-3-9.hl";;
+#use "gcs/cap-3-9.hl";;
+- : term = `b <=> T`
+Exception: Failure "vsubst: Bad substitution list".
+# subst;;
+subst;;
+val it : (term * term) list -> term -> term = <fun>
+# subst [`T`, `F`] `b = F`;;
+subst [`T`, `F`] `b = F`;;
+val it : term = `b <=> T`
+# type_of `x`;;
+type_of `x`;;
+Warning: inventing type variables
+val it : hol_type = `:?85670`
+# subst [`a:A`,`1`] `1+1`;;
+subst [`a:A`,`1`] `1+1`;;
+Exception: Failure "vsubst: Bad substitution list".
+# subst [`a:num`,`1`] `1+1`;;
+subst [`a:num`,`1`] `1+1`;;
+val it : term = `a + a`
+# #use "prof_extensions.ml";;
+#use "prof_extensions.ml";;
+val APPLY_TAC : thm_tactic = <fun>
+val HAVE_TAC : term -> tactic = <fun>
+val CUT_TAC : term -> tactic = <fun>
+val ASSERT_TAC : string -> term -> tactic = <fun>
+val TRIVIAL : term -> thm = <fun>
+val BY : conv -> string -> thm list -> tactic = <fun>
+val SHOW_TAC : term -> tactic = <fun>
+val CASES_TAC : string -> term -> tactic = <fun>
+val OLD_ABBREV_TAC : term -> (string * thm) list * term -> goalstate = <fun>
+val ABBREV_TAC : term -> tactic = <fun>
+val EXPAND_TAC : string -> tactic = <fun>
+- : unit = ()
+val parse_term_invention : string -> term = <fun>
+val quotexpander : string -> string = <fun>
+- : bool = false
+- : unit = ()
+- : bool = true
+# `z`;;
+`z`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# subst [`T`, `F`] `b = F`;;
+subst [`T`, `F`] `b = F`;;
+val it : term = `b <=> T`
+# `x`;;
+`x`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# `x:real`;;
+`x:real`;;
+val it : term = `x`
+# type_of it;;
+type_of it;;
+val it : hol_type = `:real`
+# `:real`;;
+`:real`;;
+val it : hol_type = `:real`
+# `% x`;;
+`% x`;;
+Warning: inventing type variables
+val it : term = `x`
+# type_of `x`;;
+type_of `x`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# type_of it;;
+type_of it;;
+val it : hol_type = `:?85707`
+# subst [`a:num`,`1`] `1+1`;;
+subst [`a:num`,`1`] `1+1`;;
+val it : term = `a + a`
+# subst [`a:A`,`1`] `1+1`;;
+subst [`a:A`,`1`] `1+1`;;
+Exception: Failure "vsubst: Bad substitution list".
+# type_of `(a, (a < b))`;;
+type_of `(a, (a < b))`;;
+val it : hol_type = `:num#bool`
+# type_of `x = y`;;
+type_of `x = y`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# type_of `x = x`;;
+type_of `x = x`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# type_of `% x = x`;;
+type_of `% x = x`;;
+Warning: inventing type variables
+val it : hol_type = `:bool`
+# type_of `% x = y`;;
+type_of `% x = y`;;
+Warning: inventing type variables
+val it : hol_type = `:bool`
+# type_of `x:A`;;
+type_of `x:A`;;
+val it : hol_type = `:A`
+# ASSUME `x + 1`;;
+ASSUME `x + 1`;;
+Exception: Failure "ASSUME: not a proposition".
+# ASSUME `x + 1 = 0`;;
+ASSUME `x + 1 = 0`;;
+val it : thm = x + 1 = 0 |- x + 1 = 0
+# ASSUME `p:bool`
+ASSUME `p:bool`
+  ;;
+;;
+val it : thm = p |- p
+# ASSUME `p:A`;;
+ASSUME `p:A`;;
+Exception: Failure "ASSUME: not a proposition".
+# ASSUME `f (x:A)`;;
+ASSUME `f (x:A)`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# ASSUME `f (x:A):bool`;;
+ASSUME `f (x:A):bool`;;
+val it : thm = f x |- f x
+# ASSUME `f x:bool`;;
+ASSUME `f x:bool`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# ASSUME `f x :bool`;;
+ASSUME `f x :bool`;;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# REFL `0 = 0`;;
+REFL `0 = 0`;;
+val it : thm = |- 0 = 0 <=> 0 = 0
+# REFL `0 = 1`;;
+REFL `0 = 1`;;
+val it : thm = |- 0 = 1 <=> 0 = 1
+# INST [`1`, `x:num`] (REFL `x + 1`);;
+INST [`1`, `x:num`] (REFL `x + 1`);;
+val it : thm = |- 1 + 1 = 1 + 1
+# (* ========================================================================= *)
+(* Tattiche per il tuturial.                                                 *)
+(* ========================================================================= *)
+
+let APPLY_TAC : thm_tactic =
+  fun th -> MATCH_ACCEPT_TAC th ORELSE MATCH_MP_TAC th;;
+
+let HAVE_TAC : term -> tactic =
+  fun tm -> SUBGOAL_THEN tm MP_TAC;;
+
+let CUT_TAC : term -> tactic =
+  let th = MESON [] `(p ==> q) /\ p ==> q`
+  and ptm = `p:bool` in
+  fun tm -> MATCH_MP_TAC (INST [tm,ptm] th) THEN CONJ_TAC;;
+
+let ASSERT_TAC s tm = SUBGOAL_THEN tm (DESTRUCT_TAC s );;
+
+let TRIVIAL = MESON[];;
+
+let BY conv lbls ths =
+  let WITH_TAC tml =
+    if tml=[] then ALL_TAC else MP_TAC (end_itlist CONJ tml) in
+  HYP WITH_TAC lbls ths THEN
+  CONV_TAC conv THEN NO_TAC;;
+
+let SHOW_TAC : term -> tactic =
+  let th = MESON [] `p <=> (p = T)`
+  and ptm = `p:bool` in
+  let BOOL_ELIM =
+    GEN_REWRITE_TAC DEPTH_CONV
+      [NOT_CLAUSES; AND_CLAUSES; OR_CLAUSES; IMP_CLAUSES; COND_CLAUSES] in
+  fun tm -> let eq = INST [tm,ptm] th in
+    SUBGOAL_THEN tm
+      (fun hp -> CHANGED_TAC (SUBST1_TAC (EQ_MP eq hp)) THEN BOOL_ELIM);;
+
+let CASES_TAC s tm =
+  let th = SPEC tm EXCLUDED_MIDDLE in
+  DISJ_CASES_THEN2 (LABEL_TAC s) (LABEL_TAC ("not_"^s)) th;;
+
+let OLD_ABBREV_TAC = ABBREV_TAC;;
+
+let ABBREV_TAC tm =
+  let s = name_of (lhs tm) in
+  OLD_ABBREV_TAC tm THEN POP_ASSUM (LABEL_TAC s);;
+
+
+let EXPAND_TAC : string -> tactic =
+  let SUBST_VAR : string -> thm_tactic =
+    fun s th ->
+      let l,r = dest_eq(concl th) in
+      if is_var l & name_of l = s then SUBST_ALL_TAC th else
+      if is_var r & name_of r = s then SUBST_ALL_TAC (GSYM th) else fail () in
+  fun s -> FIRST_X_ASSUM (SUBST_VAR s);;
+
+(* ------------------------------------------------------------------------- *)
+(* Parser per type invention.                                                *)
+(* ------------------------------------------------------------------------- *)
+
+type_invention_error := true;;
+
+let parse_term_invention s =
+  let tie = !type_invention_error in
+  type_invention_error := not tie;
+  let tm = parse_term s in
+  type_invention_error := tie;
+  tm;;
+
+let quotexpander s =
+  if s = "" then failwith "Empty quotation" else
+  let c = String.sub s 0 1 in
+  if c = ":" then
+    "parse_type \""^
+    (String.escaped (String.sub s 1 (String.length s - 1)))^"\""
+  else if c = "%" then
+    "parse_term_invention \""^
+    (String.escaped (String.sub s 1 (String.length s - 1)))^"\""
+  else if c = ";" then "parse_qproof \""^(String.escaped s)^"\""
+  else "parse_term \""^(String.escaped s)^"\"";;
+
+
+unset_jrh_lexer;;
+Quotation.add "tot" (Quotation.ExStr (fun x -> quotexpander));;
+(* ========================================================================= *)
+  (* Tattiche per il tuturial.                                                 *)
+  (* ========================================================================= *)
+  
+  let APPLY_TAC : thm_tactic =
+    fun th -> MATCH_ACCEPT_TAC th ORELSE MATCH_MP_TAC th;;
+
+let HAVE_TAC : term -> tactic =
+val APPLY_TAC : thm_tactic = <fun>
+#       fun tm -> SUBGOAL_THEN tm MP_TAC;;
+
+val HAVE_TAC : term -> tactic = <fun>
+#   let CUT_TAC : term -> tactic =
+    let th = MESON [] `(p ==> q) /\ p ==> q`
+    and ptm = `p:bool` in
+    fun tm -> MATCH_MP_TAC (INST [tm,ptm] th) THEN CONJ_TAC;;
+
+let ASSERT_TAC s tm = SUBGOAL_THEN tm (DESTRUCT_TAC s );;
+
+val CUT_TAC : term -> tactic = <fun>
+let TRIVIAL = MESON[];;
+#   
+let BY conv lbls ths =
+val ASSERT_TAC : string -> term -> tactic = <fun>
+#     let WITH_TAC tml =
+val TRIVIAL : term -> thm = <fun>
+#           if tml=[] then ALL_TAC else MP_TAC (end_itlist CONJ tml) in
+    HYP WITH_TAC lbls ths THEN
+    CONV_TAC conv THEN NO_TAC;;
+
+let SHOW_TAC : term -> tactic =
+val BY : conv -> string -> thm list -> tactic = <fun>
+#       let th = MESON [] `p <=> (p = T)`
+    and ptm = `p:bool` in
+    let BOOL_ELIM =
+      GEN_REWRITE_TAC DEPTH_CONV
+        [NOT_CLAUSES; AND_CLAUSES; OR_CLAUSES; IMP_CLAUSES; COND_CLAUSES] in
+    fun tm -> let eq = INST [tm,ptm] th in
+      SUBGOAL_THEN tm
+        (fun hp -> CHANGED_TAC (SUBST1_TAC (EQ_MP eq hp)) THEN BOOL_ELIM);;
+
+let CASES_TAC s tm =
+  let th = SPEC tm EXCLUDED_MIDDLE in
+val SHOW_TAC : term -> tactic = <fun>
+#         DISJ_CASES_THEN2 (LABEL_TAC s) (LABEL_TAC ("not_"^s)) th;;
+
+let OLD_ABBREV_TAC = ABBREV_TAC;;
+
+val CASES_TAC : string -> term -> tactic = <fun>
+#   let ABBREV_TAC tm =
+val OLD_ABBREV_TAC : term -> tactic = <fun>
+#       let s = name_of (lhs tm) in
+    OLD_ABBREV_TAC tm THEN POP_ASSUM (LABEL_TAC s);;
+
+
+val ABBREV_TAC : term -> tactic = <fun>
+#     let EXPAND_TAC : string -> tactic =
+    let SUBST_VAR : string -> thm_tactic =
+      fun s th ->
+        let l,r = dest_eq(concl th) in
+        if is_var l & name_of l = s then SUBST_ALL_TAC th else
+        if is_var r & name_of r = s then SUBST_ALL_TAC (GSYM th) else fail () in
+    fun s -> FIRST_X_ASSUM (SUBST_VAR s);;
+
+val EXPAND_TAC : string -> tactic = <fun>
+#   (* ------------------------------------------------------------------------- *)
+  (* Parser per type invention.                                                *)
+  (* ------------------------------------------------------------------------- *)
+  
+  type_invention_error := true;;
+
+val it : unit = ()
+#   let parse_term_invention s =
+    let tie = !type_invention_error in
+    type_invention_error := not tie;
+    let tm = parse_term s in
+    type_invention_error := tie;
+    tm;;
+
+let quotexpander s =
+val parse_term_invention : string -> term = <fun>
+#       if s = "" then failwith "Empty quotation" else
+    let c = String.sub s 0 1 in
+    if c = ":" then
+      "parse_type \""^
+      (String.escaped (String.sub s 1 (String.length s - 1)))^"\""
+    else if c = "%" then
+      "parse_term_invention \""^
+      (String.escaped (String.sub s 1 (String.length s - 1)))^"\""
+    else if c = ";" then "parse_qproof \""^(String.escaped s)^"\""
+    else "parse_term \""^(String.escaped s)^"\"";;
+
+
+unset_jrh_lexer;;
+val quotexpander : string -> string = <fun>
+#     val it : bool = false
+# Quotation.add "tot" (Quotation.ExStr (fun x -> quotexpander));;
+val it : unit = ()
+# set_jrh_lexer;;set_jrh_lexer;;
+set_jrh_lexer;;set_jrh_lexer;;
+val it : bool = true
+# INST [`1`, `x:real`] (ASSUME `x + 1 = 0`);;
+INST [`1`, `x:real`] (ASSUME `x + 1 = 0`);;
+Exception: Failure "vsubst: Bad substitution list".
+# INST [`1`, `x:num`] (ASSUME `x + 1 = 0`);;
+INST [`1`, `x:num`] (ASSUME `x + 1 = 0`);;
+val it : thm = 1 + 1 = 0 |- 1 + 1 = 0
+# INST [`q:A`, `x:real`] (ASSUME `x + 1 = 0`);;
+INST [`q:A`, `x:real`] (ASSUME `x + 1 = 0`);;
+Exception: Failure "vsubst: Bad substitution list".
+# INST [`q:real`, `x:real`] (ASSUME `x + 1 = 0`);;
+INST [`q:real`, `x:real`] (ASSUME `x + 1 = 0`);;
+val it : thm = x + 1 = 0 |- x + 1 = 0
+# INST [`y:real`, `x:real`] (ASSUME `x = y`);;
+INST [`y:real`, `x:real`] (ASSUME `x = y`);;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# INST [`x+1`, `x+1`] (REFL `x + 1`);;
+INST [`x+1`, `x+1`] (REFL `x + 1`);;
+Exception: Failure "dest_var: not a variable".
+# INST [`x+1`, `x`] (REFL `x + 1`);;
+INST [`x+1`, `x`] (REFL `x + 1`);;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# INST [`x+1`, `x:num`] (REFL `x + 1`);;
+INST [`x+1`, `x:num`] (REFL `x + 1`);;
+val it : thm = |- (x + 1) + 1 = (x + 1) + 1
+# INST [`x`, `x:num`] (REFL `x + 1`);;
+INST [`x`, `x:num`] (REFL `x + 1`);;
+Exception: Failure "typechecking error (cannot infer type of variables)".
+# INST [`x:num`, `x:num`] (REFL `x + 1`);;
+INST [`x:num`, `x:num`] (REFL `x + 1`);;
+val it : thm = |- x + 1 = x + 1
+# INST [`x+1`, `x+1`] (REFL `x + 1`);;
+INST [`x+1`, `x+1`] (REFL `x + 1`);;
+Exception: Failure "dest_var: not a variable".
+# INST [`x:real`, `x:num`] (REFL `x + 1`);;
+INST [`x:real`, `x:num`] (REFL `x + 1`);;
+Exception: Failure "vsubst: Bad substitution list".
+# INST [`2`, `x + 1`] (REFL `x + 1`);;
+INST [`2`, `x + 1`] (REFL `x + 1`);;
+Exception: Failure "dest_var: not a variable".
+# INST [`2`, `x + 1`] `x + 1`;;
+INST [`2`, `x + 1`] `x + 1`;;
+# INST [`2`, `x + 1`] `x + 1`;;
+Error: This expression has type term = Hol.term
+       but an expression was expected of type thm = Hol.thm
+# SUBST [`2`, `x + 1`] `x + 1`;;
+SUBST [`2`, `x + 1`] `x + 1`;;
+# SUBST [`2`, `x + 1`] `x + 1`;;
+Error: Unbound value SUBST
+# subst [`2`, `x + 1`] `x + 1`;;
+subst [`2`, `x + 1`] `x + 1`;;
+val it : term = `2`
+# subst;;
+subst;;
+val it : (term * term) list -> term -> term = <fun>
+# (* subst works on terms, INST works on theorems *)
+(* subst works on terms, INST works on theorems *)
+  ;;
+;;
+Toplevel input:
+# (* subst works on terms, INST works on theorems *)
+  ;;
+  ^^
+Parse error: illegal begin of top_phrase
+# 
+mn@mn-toshiba:~/Developer/working-copies/uni/hol_light$ exit
+exit
+exit
+
+Process shell finished

@@ -1,0 +1,444 @@
+(* ========================================================================= *)
+(* This file contains some exercises based on chapters 3--9 of Harrison's    *)
+(* HOL Light Tutorial                                                        *)
+(* ========================================================================= *)
+
+(* ------------------------------------------------------------------------- *)
+(* Questo file contiene una lista di esempi di istruzioni OCaml/HOL.         *)
+(* Gli esempi proposti sono suddivisi seguendo la struttura del Tutorial.    *)
+(*                                                                           *)
+(* Per ciascuna di esse rispondere alle seguenti domande:                    *)
+(*  - Qual e' il risultato dei seguenti comandi e perche'?                   *)
+(*  - Qual e' il tipo OCaml (term, thm, etc.) del risultato?                 *)
+(*  - In quali casi viene prodotto un errore e quale tipo di errore?         *)
+(*  - In quali casi viene prodotto uno di errore                             *)
+(*      "typechecking error (cannot infer type of variables)"                *)
+(*    o un avvertimento                                                      *)
+(*      "Warning: inventing type variables" ?                                *)
+(*                                                                           *)
+(* Verificare le risposte inserendo i comandi in HOL solo DOPO aver risposto *)
+(* a ciascuna domanda.                                                       *)
+(* ------------------------------------------------------------------------- *)
+
+
+(* ========================================================================= *)
+(* 3. HOL Basics                                                             *)
+(* ========================================================================= *)
+
+subst [`T`,`F`] `b = F`;;
+subst [`a:A`,`1`] `1+1`;;
+
+type_of `2+2`;;
+type_of `(a, (a < b))`;;
+type_of `x:num = y`;;
+type_of `x = y`;;
+type_of `x:A`;;
+type_of `x`;;
+type_of `% x`;;
+type_of `% x = y`;;
+type_of `% (f x) + 1`;;
+type_of `% f (x + 1)`;;
+type_of `f (x + 1):A`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Dove serve, inserire le annotazioni di tipo mancanti per evitare l'errore *)
+(* Exception: Failure "typechecking error (cannot infer type of variables)". *)
+(* Dove appropriato inserire variabili di tipo come `:A`, `:B` etc. per      *)
+(* indicare tipi generici.                                                   *)
+(* ------------------------------------------------------------------------- *)
+
+ASSUME `1+1=0`;;
+ASSUME `x + 1`;;
+ASSUME `p:bool`;;
+ASSUME `p:A`;;
+ASSUME `p`;;
+ASSUME `f x : bool`;;
+ASSUME `f (x:A)`;;
+
+REFL `0`;;
+REFL `x:A`;;
+REFL `x`;;
+REFL 0;;
+REFL `0 = 0`;;
+
+INST [`1`, `x:num`] (REFL `x + 1`);;
+INST [`1`, `x:real`] (ASSUME `x + 1 = 0`);;
+INST [`y:real`, `x:real`] (ASSUME `x = 0`);;
+INST [`y:real`, `x:real`] (ASSUME `x = y`);;
+INST [`x+1`, `x+1`] (REFL `x + 1`);;
+INST [`2`, `x:num`] `x+1`;;
+
+concl (REFL `x+1`);;
+concl (ASSUME `x=0`);;
+type_of (concl (REFL `0`));;
+type_of (REFL `0`);;
+
+ARITH_RULE `x - x - 1 = 0`;;
+ARITH_RULE `x - (x - 1) = 0`;;
+
+
+(* ========================================================================= *)
+(* 4. Propositional logic                                                    *)
+(* ========================================================================= *)
+
+(* ------------------------------------------------------------------------- *)
+(* Quale dei seguenti operatori binari ha priorita' piu' alta?               *)
+(* Quali sono associativi a sinistra?                                        *)
+(* ==>, <=>, /\, \/, =, +, - *, /                                            *)
+(* ------------------------------------------------------------------------- *)
+
+TAUT `x > 1 <=> x > 1`;;
+ARITH_RULE `x > 1 <=> x > 1`;;
+
+TAUT `x > 2 ==> x > 1`;;
+ARITH_RULE `x > 2 ==> x > 1`;;
+
+ARITH_RULE `x:A = x`;;
+TAUT `x:A = x`;;
+TAUT `x = x:bool`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Qual e' la differenza tra questi tre teoremi?                             *)
+(* ------------------------------------------------------------------------- *)
+
+CONJ (ASSUME `p:bool`) (ASSUME `p:bool`);;
+ASSUME `p /\ p`;;
+MP (TAUT `p ==> p /\ p`) (ASSUME `p:bool`);;
+
+
+(* ========================================================================= *)
+(* 5. Equations and functions                                                *)
+(* ========================================================================= *)
+
+type_of `(<=>)`;;
+type_of `(=)`;;
+type_of `(=) 3`;;
+type_of `~a,a+1`;;
+
+mk_comb (`(<=>) p`, `1=0`);;
+mk_comb (`(<=>) p`, `n:num`);;
+mk_comb (`(<=>) p`, `q:bool`);;
+mk_comb (`(<=>) p`, `q`);;
+mk_comb (mk_comb (`(+)`,`1`), `2`);;
+REFL (mk_comb (mk_comb (`(+)`,`1`), `2`));;
+
+mk_eq (`1`, `a+2`);;
+mk_eq (`x`, `a+2`);;
+mk_eq (`1`, mk_comb (`(+) a`, `2`));;
+ASSUME (mk_eq (`1`, `a+2`));;
+
+CONJ_PAIR (ASSUME `x = y /\ q`);;
+CONJ_PAIR (REFL `p /\ q`);;
+
+MK_COMB (REFL `(+) 2`, ASSUME `x = 1`);;
+MK_COMB (REFL `(+) 2`, ASSUME `x = y`);;
+MK_COMB (REFL `(+) 2`, ARITH_RULE `3+2=5`);;
+MK_COMB (MK_COMB (REFL `(+)`, REFL `x:num`), ARITH_RULE `1+1=2`);;
+
+fst (dest_comb `1 + x`);;
+snd (dest_comb `1 + x`);;
+
+CONJ_PAIR `p /\ q`;;
+CONJ_PAIR (ASSUME `p /\ q`);;
+fst (CONJ_PAIR (ASSUME `p /\ q`));;
+concl (fst (CONJ_PAIR (ASSUME `p /\ q`)));;
+
+
+(* ========================================================================= *)
+(* 6. Abstractions and quantifiers                                           *)
+(* ========================================================================= *)
+
+fst (dest_comb `!x. x=x`);;
+snd (dest_comb `!x. x=x`);;
+
+subst [`1`,`x:num`; `2`,`a:num`] `\x. x + a`;;
+subst [`1`,`x:num`; `2`,`a:num`] `(\x. x + a) x`;;
+
+INST [`1`,`x:num`; `2`,`a:num`] (ARITH_RULE `!x. x + a = a + x`);;
+INST [`1`,`x:num`] (REFL `x:num`);;
+INST [`1`,`x:num`] (GEN `x:num` (REFL `x:num`));;
+INST [`1`,`x:num`] (GEN `x` (REFL `x:num`));;
+
+INST [`1`,`x:num`] (SPEC `x:num` ADD_ASSOC);;
+
+(* Osservare la rinominazione n -> n' nei casi seguenti. *)
+SPEC `n:num` ADD_ASSOC;;
+INST [`1`,`n:num`] (SPEC `n:num` ADD_ASSOC);;
+
+(* ========================================================================= *)
+(* 7. Conversions and rewriting                                              *)
+(* ========================================================================= *)
+
+BETA_CONV `(\y. x + y) y`;;
+BETA_CONV `(\x. x + y) y`;;
+BETA_CONV `(\x y. x + y) y`;;
+BETA_CONV `\x. (\y. x + y) 3`;;
+(ABS_CONV BETA_CONV) `\x. (\y. x + y) 3`;;
+
+MP (ARITH_RULE `x=0 ==> x >= 0`) (ASSUME `x = 0`);;
+MATCH_MP (ARITH_RULE `x=0 ==> x >= 0`) (ASSUME `x = 0`);;
+MATCH_MP (ARITH_RULE `y=0 ==> y >= 0`) (ASSUME `x EXP 2 = 0`);;
+MATCH_MP (ARITH_RULE `!x. x=0 ==> x >= 0`) (ASSUME `x = 0`);;
+MP (ARITH_RULE `!y. y = 0 ==> y >= 0`) (ASSUME `x = 0`);;
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostrare il teorema                                                     *)
+(* |- 1 + (\y. f y) z = 1 + f z                                              *)
+(* (usare BETA_CONV con uno dei conversionals applicati al primo membro.)    *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostrare il teorema                                                     *)
+(* |- x + y + z = z + y + x;;                                                *)
+(* usando ADD_SYM e le conversioni (e senza usare ARITH_RULE).               *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostrare il teorema                                                     *)
+(* |- 2 EXP (2 EXP (2 EXP 2)) = 65536                                        *)
+(* usando NUM_EXP_CONV (senza usare ARITH_RULE, NUM_REDUCE_CONV) .           *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostrare il teorema                                                     *)
+(* |- 2 EXP (2 EXP (2 EXP (2 EXP 2))) EXP 0 = 1                              *)
+(* Si osservi che la dimostrazione con NUM_EXP_CONV richiede molto tempo di  *)
+(* calcolo.  Cercare una dimostrazione computazionalmente efficiente usando  *)
+(* il teorema EXP.                                                           *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Qual e' il risultato dei seguenti comandi?                                *)
+(* Quali riscritture avvengono durante l'esecuzione dei seguenti comandi e   *)
+(* in quale ordine?                                                          *)
+(* ------------------------------------------------------------------------- *)
+
+REWRITE_CONV [] `if x /\ T <=> x then (!x. F ==> x+1=2) else y \/ F`;;
+REWRITE_CONV [ASSUME `0+0+0=0`] `0+0 = 0+0+0`;;
+REWRITE_CONV [ASSUME `0+0+0=0`] `0+0+0+0+0 = 0+0+0`;;
+REWRITE_CONV [ARITH_RULE `0+0+0=0`] `0+0 = 0+0+0`;;
+REWRITE_CONV [ASSUME `!a b c. a+b+c=0`] `0+0+0+0+0 = 0+0+0`;;
+
+
+(* ========================================================================= *)
+(* 8. Tactics and tacticals                                                  *)
+(* ========================================================================= *)
+
+(* ------------------------------------------------------------------------- *)
+(* Cercare di capire il funzionamento delle seguenti dimostrazioni           *)
+(* interattive.  Per le tattiche che non si conoscono usare la Very Quick    *)
+(* Reference Guide e/o la documentazione in linear (help "....")             *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Esempio 1.                                                                *)
+(* Dimostrazione di   |- 2+2=4 /\ 2<3   in vari modi possibili.              *)
+(* ------------------------------------------------------------------------- *)
+
+g `2+2=4 /\ 2<3`;;
+e CONJ_TAC;;
+e (CONV_TAC (LAND_CONV NUM_ADD_CONV));;
+e REFL_TAC;;
+e (CONV_TAC NUM_LT_CONV);;
+
+g `2+2=4 /\ 2<3`;;
+e (CONV_TAC (BINOP_CONV NUM_REDUCE_CONV));;
+e (REWRITE_TAC[])  (oppure CONV_TAC TAUT  OPPURE MESON_TAC[])
+
+g `2+2=4 /\ 2<3`;;
+e (CONV_TAC NUM_REDUCE_CONV);;  (* Oppure NUM_REDUCE_TAC *)
+
+g `2+2=4 /\ 2<3`;;
+e (CONV_TAC ARITH_RULE);;  (* Oppure ARITH_TAC *)
+
+(* ------------------------------------------------------------------------- *)
+(* esempio 2.                                                                *)
+(* Dimostrazione di   |- 0=1 ==> 1=0   in vari modi possibili.               *)
+(* ------------------------------------------------------------------------- *)
+
+g `0=1 ==> 1=0`;;
+(* Dimostrazioni compatte, costituite da una sola riga: *)
+e ARITH_TAC;;
+e (CONV_TAC NUM_REDUCE_CONV);;
+e (REWRITE_TAC[EQ_SYM_EQ]);;
+e (SIMP_TAC[]);;
+e (MESON_TAC[]);;
+
+(* ------------------------------------------------------------------------- *)
+(* Altre dimostrazioni di   |- 0=1 ==> 1=0  .                                *)
+(* ------------------------------------------------------------------------- *)
+
+g `0=1 ==> 1=0`;;
+e DISCH_TAC
+e (ASM_REWRITE_TAC[]);;
+
+g `0=1 ==> 1=0`;;
+e DISCH_TAC;;
+e (CONV_TAC (REWR_CONV EQ_SYM_EQ));;
+e (FIRST_ASSUM ACCEPT_TAC);;
+
+g `0=1 ==> 1=0`;;
+e (DISCH_THEN ASSUME_TAC);;
+e (FIRST_ASSUM (ACCEPT_TAC o GSYM));;
+
+g `0=1 ==> 1=0`;;
+e (DISCH_THEN (ASSUME_TAC o GSYM));;
+e (FIRST_ASSUM ACCEPT_TAC);;
+
+g `0=1 ==> 1=0`;;
+e DISCH_TAC;;
+e (FIRST_ASSUM (ASSUME_TAC o GSYM));;
+e (FIRST_ASSUM MP_TAC);;
+e (CONV_TAC TAUT);;
+
+g `0=1 ==> 1=0`;;
+e (DISCH_THEN (ACCEPT_TAC o GSYM));;
+
+(* ------------------------------------------------------------------------- *)
+(* La precedente dimostrazione interattiva corrispode alla seguente          *)
+(* dimostrazione non interattiva                                             *)
+(* ------------------------------------------------------------------------- *)
+
+DISCH_ALL (GSYM (ASSUME `0=1`));;
+
+(* Versioni piu' esplicita della precedente dimostrazione. *)
+g `0=1 ==> 1=0`;;
+e (DISCH_THEN (fun th -> ASSUME_TAC th));;
+e (FIRST_ASSUM (fun th -> ACCEPT_TAC (GSYM th)));;
+
+g `0=1 ==> 1=0`;;
+e (DISCH_THEN (fun x -> ASSUME_TAC (ASSUME `0=1`)));;
+e (FIRST_ASSUM (fun x -> ACCEPT_TAC (GSYM (ASSUME `0=1`))));;
+
+(* ------------------------------------------------------------------------- *)
+(* Oltre ad ACCEPT_TAC c'e' MATCH_ACCEPT_TAC                                 *)
+(* Esempio di uso di MATCH_ACCEPT_TAC                                        *)
+(* ------------------------------------------------------------------------- *)
+
+g `(!x:num. x = x) ==> 0 = 0`;;
+e (DISCH_THEN MATCH_ACCEPT_TAC);;
+
+(* ------------------------------------------------------------------------- *)
+(* esempio 3.                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+g `p ==> p /\ p`;;
+e (CONV_TAC TAUT);;
+e (MESON_TAC[]);;
+e (REWRITE_TAC[]);;
+
+g `p ==> p /\ p`;;
+e DISCH_TAC;;
+(* Volendo ASM_REWRITE_TAC[] oppure ASM_MESON_TAC[] *)
+e CONJ_TAC;;
+e (FIRST_ASSUM ACCEPT_TAC);;  (* Oppure e (ACCEPT_TAC (ASSUME `p:bool`));; *)
+e (FIRST_ASSUM ACCEPT_TAC);;
+(* CVD *)
+
+g `p ==> p \/ q`;;
+e DISCH_TAC;;
+e (DISJ1_TAC);;
+e (FIRST_ASSUM ACCEPT_TAC);;
+(* CVD *)
+
+(* ------------------------------------------------------------------------- *)
+(* esempio 4.                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+g `p \/ q <=> q \/ p`;;
+e EQ_TAC;;
+e (DISCH_THEN DISJ_CASES_TAC);;
+e DISJ2_TAC;;
+e (FIRST_ASSUM ACCEPT_TAC);;
+e DISJ1_TAC;;
+e (FIRST_ASSUM ACCEPT_TAC);;
+
+g `p \/ q <=> q \/ p`;;
+e EQ_TAC;;
+e STRIP_TAC;;
+e (ASM_REWRITE_TAC[]);;
+e (ASM_REWRITE_TAC[]);;
+e STRIP_TAC;;
+e (ASM_REWRITE_TAC[]);;
+e (ASM_REWRITE_TAC[]);;
+
+g `p \/ q <=> q \/ p`;;
+e (EQ_TAC THEN STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+
+(* ------------------------------------------------------------------------- *)
+(* esempio 5.                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+g `!a b. a - b = 0 \/ b - a = 0`;;
+e (REPEAT GEN_TAC);;
+e (DISJ_CASES_TAC (SPECL [`a:num`;`b:num`] LE_CASES));;
+e DISJ1_TAC;;
+e (ASM_REWRITE_TAC[SUB_EQ_0]);;
+e DISJ2_TAC;;
+e (ASM_REWRITE_TAC[SUB_EQ_0]);;
+
+g `!a b. a - b = 0 \/ b - a = 0`;;
+e (REPEAT GEN_TAC THEN
+   DISJ_CASES_TAC (SPECL [`a:num`;`b:num`] LE_CASES) THEN
+   ASM_REWRITE_TAC[SUB_EQ_0]);;
+
+g `!a b. a - b = 0 \/ b - a = 0`;;
+e (MESON_TAC[LE_CASES; SUB_EQ_0]);;
+
+(* ------------------------------------------------------------------------- *)
+(* Enunciare e dimostrare il seguente teorema:                               *)
+(* "La somma degli interi da 1 a n maggiore o uguale ad n."                  *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Rifare parte della teoria dei numeri pari e dispari.                      *)
+(*                                                                           *)
+(* Formalizzare le seguenti definizioni e teoremi:                           *)
+(* Definire il predicato `PARI` come segue: Un numero e' pari se e' il       *)
+(*   doppio di un altro numero.                                              *)
+(* Definire il predicato `DISPARI` come segue: Un numero e' dispare se       *)
+(*   e' il successore del doppio di un altro numero.                         *)
+(* Thm: Zero e' pari poiche' e' il doppio di zero.                           *)
+(* Thm: Zero non e' dispari.                                                 *)
+(* Thm: se n e' pari allora n+1 e' dispari.                                  *)
+(* Thm: se n e' dispari allora n+1 e' spari.                                 *)
+(* Thm: Un numero non dispari e' pari.                                       *)
+(* Thm: Un numero non pari e' dispari.                                       *)
+(* Thm: Ogni numero e' pari o dispari.                                       *)
+(* Thm: n+2 e' pari se e solo se n e' pari.                                  *)
+(* Thm: n+2 e' dispari se e solo se n e' dispari.                            *)
+(* ------------------------------------------------------------------------- *)
+
+
+(* ========================================================================= *)
+(* 9. HOL number systems                                                     *)
+(* ========================================================================= *)
+
+prioritize_real();;
+type_of `2`;;
+type_of `x+2`;;
+type_of `&2`;;
+type_of `3 DIV 2`;;
+type_of `3/2`;;
+type_of `&3/&2`;;
+type_of `&3 / &2`;;
+
+let DOUBLE = new_definition
+  `DOUBLE x = x + x`;;
+
+type_of `DOUBLE`;;
+
+prioritize_int();;
+type_of `DOUBLE(&2)`;;
+type_of `DOUBLE(&n) + n`;;
+
+let NDOUBLE = new_definition
+  `NDOUBLE (n:num) = n+n`;;
+
+type_of `NDOUBLE`;;
+
+g `!n. NDOUBLE n = DOUBLE n`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Aggiustare e dimostrare l'enunciato precedente.                           *)
+(* ------------------------------------------------------------------------- *)
