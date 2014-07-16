@@ -1,0 +1,3 @@
+[submodule "maggesi-holl-mode"]
+	path = maggesi-holl-mode
+	url = git@github.com:maggesi/holl-mode.git
