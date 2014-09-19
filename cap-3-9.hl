@@ -113,7 +113,7 @@ MP (TAUT `p ==> p /\ p`) (ASSUME `p:bool`);;
 type_of `(<=>)`;;
 type_of `(=)`;;
 type_of `(=) 3`;;
-type_of `~a,a+1`;;
+type_of `~a,b+1`;;
 
 mk_comb (`(<=>) p`, `1=0`);;
 mk_comb (`(<=>) p`, `n:num`);;
