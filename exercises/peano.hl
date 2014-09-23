@@ -1,0 +1,344 @@
+(* ========================================================================= *)
+(* Esercitazione sui numeri naturali                                         *)
+(*                                                                           *)
+(* INTRODUZIONE                                                              *)
+(*                                                                           *)
+(* Definiamo il tipo dei numeri naturali.  Usiamo una definizione            *)
+(* assiomatica, cioe' supporremo, senza altra giustificazione,               *)
+(* l'esistenza dei numeri naturali e le loro proprieta' elementari nello     *)
+(* stile dell'aritmetica di Peano.                                           *)
+(* Una presentazione non assiomatica sara' data in un secondo momento.       *)
+(* ========================================================================= *)
+
+(* ------------------------------------------------------------------------- *)
+(* NOTA TECNICA                                                              *)
+(*                                                                           *)
+(* HOL non permette di definire oggetti gia' definiti poiche'.  Quindi,      *)
+(* poiche' i naturali sono gia' presenti in HOL, dobbiamo dare alle          *)
+(* nostre definizioni dei nomi non ancora utilizzati.                        *)
+(*                                                                           *)
+(* Ad esempio `:num` e' il tipo dei numeri naturali in HOL quindi            *)
+(* chiameremo il tipo dei "nostri" naturali `:nat`.  Analogamente            *)
+(* chiameremo `S` invece che `SUC`, il successore.  Il numero zero sara'     *)
+(* indicato con `O` (la lettera maiuscola) invece di `0` (la cifra).         *)
+(* La seguente tabella riassume i nomi usati in questo file rispetto a       *)
+(* quelli gia' presenti in HOL.                                              *)
+(*                                                                           *)
+(*    Tipo e costanti:                                                       *)
+(*                                                                           *)
+(*        `:num`         `:nat`           Tipo dei numeri naturali           *)
+(*        `0`            `O`              Zero (lettera "O" maiuscola)       *)
+(*        `SUC`          `S`              Successore                         *)
+(*        `(+)`          `PLUS`           Somma                              *)
+(*        `(*)`          `TIMES`          Prodotto                           *)
+(*                                                                           *)
+(*    Teoremi (lista parziale):                                              *)
+(*                                                                           *)
+(*        SUC_INJ        S_INJ            Il successore e' iniettivo         *)
+(*        ADD_ASSOC      PLUS_ASSOC       La somma e' associativa            *)
+(*        ADD_0          PLUS_ZERO        Elemento neutro a destra           *)
+(*        MULT_ASSOC     TIMES_ASSOC      Il prodotto e' associativo         *)
+(*        MULT_0         PLUS_ZERO        Elemento assorbente a destra       *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Introduciamo un nuovo tipo `:nat` dei numeri naturali di arita' zero.     *)
+(* (In HOL esiste gia' un tipo per i numeri naturali ma e' chiamato `:num`.) *)
+(* ------------------------------------------------------------------------- *)
+
+new_type("nat",0);;
+
+(* ------------------------------------------------------------------------- *)
+(* Introduciamo anche due costanti per denotare lo zero e il                 *)
+(* successore.  Attenzione: per motivi sintattici, invece di 0 (gia' usato   *)
+(* per i `:num`) usiamo O (la lettera maiuscola).                            *)
+(* ------------------------------------------------------------------------- *)
+
+new_constant("O",`:nat`);;
+new_constant("S",`:nat->nat`);;
+
+(* ------------------------------------------------------------------------- *)
+(* Il tipo `:nat` e le costanti `O` e `S` formano la nostra ontologia.       *)
+(* Adesso diamo i postulati della teoria.                                    *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Zero e successore sono diversi.                                           *)
+(* ------------------------------------------------------------------------- *)
+
+let NOT_S_ZERO = new_axiom
+  `!n. ~(S n = O)`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Due numeri che hanno lo stesso successore, sono uguali, cioe' `S` e'      *)
+(* iniettiva.                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+let S_INJ = new_axiom
+  `!m n. S m = S n ==> m = n`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Principio di induzione.                                                   *)
+(* ------------------------------------------------------------------------- *)
+
+let nat_INDUCTION = new_axiom
+  `!P. P O /\ (!n. P n ==> P (S n)) ==> (!n. P n)`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Principio di ricorsione.                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+let nat_RECURSION = new_axiom
+  `!e:A f.
+      ?fn. fn O = e /\
+           (!n. fn (S n) = f (fn n) n)`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Adesso abbiamo finito le definizioni essenziali dei numeri naturali.  Ma  *)
+(* non abbiamo ancora definito nessuna operazione fondamentale sui numeri    *)
+(* come, ad esempio, le quattro operazioni.                                  *)
+(*                                                                           *)
+(* Possiamo definire ciascuna di queste operazioni assiomaticamente.         *)
+(* Ad esempio, definiamo l'addizione assiomaticamente.                       *)
+(* Lo facciamo in due passi:                                                 *)
+(*   - introduzione di una nuova costante ADDAX;                             *)
+(*   - introduzione di un postulato che definisce ADDAX.                     *)
+(* ------------------------------------------------------------------------- *)
+
+new_constant("ADDAX",`:nat->nat->nat`);;
+
+let ADDAX = new_axiom
+  `(!n. ADDAX O n = n) /\
+   (!m n. ADDAX (S m) n = S (ADDAX m n))`;;
+
+(* Dimostriamo, come esempio, che 1 + 1 = 2. *)
+g `ADDAX (S O) (S O) = S (S O)`;;
+e (REWRITE_TAC[ADDAX]);;
+top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Per garantire la consistenza del sistema, e' consigliabile evitare il     *)
+(* piu' possibile le definizioni assiomatiche.  Possiamo allora ricorrere al *)
+(* principio di ricorsione.                                                  *)
+(*                                                                           *)
+(* Esempio: Definiamo per ricorsione una nuova funzione `DOUBLE n` che       *)
+(* calcola il doppio di un numero.                                           *)
+(* Precisamente otterremo DOUBLE specializzando nat_RECURSION                *)
+(* ------------------------------------------------------------------------- *)
+
+nat_RECURSION;;
+
+ISPECL [`O`; `\p (n:nat). S (S p)`] nat_RECURSION;;
+
+REWRITE_RULE [] it;;  (* Metodo veloce per effettuare una beta riduzione. *)
+
+let DOUBLE_EXISTS = it;;
+
+(* ------------------------------------------------------------------------- *)
+(* Dato un teorema di esistenza, possiamo usarlo per una nuova definizione.  *)
+(* ------------------------------------------------------------------------- *)
+
+let DOUBLE = new_specification ["DOUBLE"] DOUBLE_EXISTS;;
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostriamo come esempio un semplice teorema: il doppio di due e quattro. *)
+(* ------------------------------------------------------------------------- *)
+
+g `DOUBLE (S (S O)) = S (S (S (S O)))`;;
+e (REWRITE_TAC[DOUBLE]);;
+let DOUBLE_TWO_EQ_FOUR = top_thm ();;
+
+(* ------------------------------------------------------------------------- *)
+(* Questo processo e' noioso e automatizzabile.  La funzione                 *)
+(* new_recursive_definition implementa esattamente questo processo.          *)
+(* Ridefiniamo DOUBLE usando new_recursive_definition (ma assegniamo a       *)
+(* questa definizione un nome diverso poiche' HOL impedisce di definire una  *)
+(* costante gia' definita) definizioni ad una stessa costante).              *)
+(* ------------------------------------------------------------------------- *)
+
+let DOUBLE' = new_recursive_definition nat_RECURSION
+  `DOUBLE' O = O /\
+   (!n. DOUBLE' (S n) = S (S (DOUBLE' n)))`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostriamo qualche altra proprieta' di DOUBLE.                           *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. DOUBLE n = O <=> n = O`;;
+e (MATCH_MP_TAC nat_INDUCTION);;
+e CONJ_TAC;;
+e (REWRITE_TAC[DOUBLE]);;
+e (INTRO_TAC "!n; hpind");;
+e (REWRITE_TAC[DOUBLE]);;
+e (REWRITE_TAC[NOT_S_ZERO]);;
+let DOUBLE_EQ_ZERO = top_thm();;
+
+(* Dimostrazione alternativa *)
+g `!n. DOUBLE n = O <=> n = O`;;
+e (MATCH_MP_TAC nat_INDUCTION);;
+e (REWRITE_TAC[DOUBLE; NOT_S_ZERO]);;
+top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Analisi per casi sui numeri naturali.                                     *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. n = O \/ (?p. n = S p)`;;
+e (MATCH_MP_TAC nat_INDUCTION);;
+e CONJ_TAC;;
+e (REWRITE_TAC[]);;
+e (INTRO_TAC "!n; Hn0 | @p. Hn1");;
+e (REWRITE_TAC[NOT_S_ZERO]);;
+e (EXISTS_TAC `O`);;
+e (HYP REWRITE_TAC "Hn0" []);;
+e (HYP REWRITE_TAC "Hn1" []);;
+e (REWRITE_TAC[NOT_S_ZERO]);;
+e (EXISTS_TAC `S p`);;
+e REFL_TAC;;
+let nat_CASES = top_thm();;
+
+let nat_CASES = prove_cases_thm nat_INDUCTION;;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizio: definire PRED il predecessore, che soddisfa le equazione.      *)
+(*   PRED (S n) = n                                                          *)
+(*   PRED O = O                                                              *)
+(* ------------------------------------------------------------------------- *)
+
+(*
+let PRED = ...
+*)
+
+(* ------------------------------------------------------------------------- *)
+(* Definire per ricorsione il predicato IS_ZERO ritorna vero sul numero zero *)
+(* e falso altrimenti.                                                       *)
+(* ------------------------------------------------------------------------- *)
+
+(*
+let ISZERO = ...
+*)
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostrare il teorema                                                     *)
+(*   g `!n. ISZERO n ==> n = O`;;                                            *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. ISZERO n ==> n = O`;;
+(* ... *)
+let ISZERO_THM = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* A questo punto possiamo vedere che NOT_S_ZERO che abbiamo preso           *)
+(* inizialmente come assioma, puo' essere invece ottenuto come conseguenza   *)
+(* del principio di ricorsione.                                              *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. ~(S n = O)`;;
+e (INTRO_TAC "!n");;
+e (ASSERT_TAC "h" `~ISZERO (S n) /\ ISZERO O`);;
+e (REWRITE_TAC[ISZERO]);;
+e (HYP MESON_TAC "h" []);;
+let NOT_S_ZERO = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Lo stesso risultato lo si poteva ottenere automaticamente con la          *)
+(* funzione prove_constructors_distinct                                      *)
+(* ------------------------------------------------------------------------- *)
+
+prove_constructors_distinct nat_RECURSION;;
+
+(* ------------------------------------------------------------------------- *)
+(* Anche l'assioma S_INJ puo' essere dimostrato grazie al principio di       *)
+(* ricorsione.                                                               *)
+(* ------------------------------------------------------------------------- *)
+
+g `!m n. S m = S n <=> m = n`;;
+e (MESON_TAC[PRED]);;
+top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Esiste una procedura specializzata per dimostrare l'iniettivita' dei      *)
+(* costruttori.                                                              *)
+(* ------------------------------------------------------------------------- *)
+
+prove_constructors_injective nat_RECURSION;;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizio:                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. DOUBLE (PRED n) = PRED (PRED (DOUBLE n))`;;
+(* ... *)
+let DOUBLE_PRED = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Addizione.                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+let PLUS = new_recursive_definition nat_RECURSION
+  `(!n. PLUS O n = n) /\
+   (!m n. PLUS (S m) n = S (PLUS m n))`;;
+
+g `PLUS (S (S O)) (S (S O)) = S (S (S (S O)))`;;
+e (REWRITE_TAC[PLUS]);;
+let TWO_PLUS_TWO_EQ_FOUR = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizio: proprieta' elementari della somma.                             *)
+(* ------------------------------------------------------------------------- *)
+
+g `!m n. PLUS m (S n) = S (PLUS m n)`;;
+e (MATCH_MP_TAC nat_INDUCTION);;
+e CONJ_TAC;;
+e (REWRITE_TAC[PLUS]);;
+e (INTRO_TAC "!m; Hm; !n");;
+e (REWRITE_TAC[PLUS]);;
+e (HYP REWRITE_TAC "Hm" []);;
+let PLUS_S = top_thm();;
+
+g `!m n l. PLUS m (PLUS n l) = PLUS (PLUS m n) l`;;
+e (MATCH_MP_TAC nat_INDUCTION);;
+e (REWRITE_TAC[PLUS]);;
+e (INTRO_TAC "!m; hpind; !n l");;
+e (HYP REWRITE_TAC "hpind" []);;
+let PLUS_ASSOC = top_thm();;
+
+g `!n. DOUBLE n = PLUS n n`;;
+(* ... *)
+let DOUBLE_EQ_PLUS = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizi:  Definire PLUS manualmente specializzando nat_RECURSION.        *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. PLUS n O = n`;;
+(* ... *)
+let PLUS_ZERO = top_thm();;
+
+g `!m n. PLUS m n = PLUS n m`;;
+(* ... *)
+let PLUS_SYM = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizi: Definire la moltiplicazione e dimostrare qualche proprieta'     *)
+(* elementare.                                                               *)
+(* ------------------------------------------------------------------------- *)
+
+(*
+let TIMES = ...
+
+*)
+g `TIMES (S (S O)) (S (S O)) = S (S (S (S O)))`;;
+(* ... *)
+let TWO_PLUS_TWO_EQ_FOUR = top_thm();;
+
+(* ... *)
+
+g `!m n. TIMES m n = TIMES n m`;;
+(* ... *)
+let TIMES_SYM = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizi: Definire la sottrazione MINUS e dimostrare qualche proprieta'   *)
+(* elementare.                                                               *)
+(* ------------------------------------------------------------------------- *)

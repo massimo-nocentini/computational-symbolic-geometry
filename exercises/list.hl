@@ -1,0 +1,238 @@
+(* ========================================================================= *)
+(* Liste.                                                                    *)
+(* ========================================================================= *)
+
+loadt "Tutorial/nat.hl";;
+
+(* ------------------------------------------------------------------------- *)
+(* Definizione delle liste come tipo induttivo.                              *)
+(* ------------------------------------------------------------------------- *)
+
+let lst_INDUCT,lst_RECURSION = define_type
+  "lst = Nil
+       | Cons A lst";;
+
+(* Esempio.  La lista contenente gli elementi O,1,2. *)
+type_of `Cons O (Cons (S O) (Cons (S (S O)) Nil))`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Alcuni teoremi di base che derivano direttamente dalla nostra definizione *)
+(* induttiva.                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+cases "lst";;                     (* Analisi per casi sui costruttori.       *)
+distinctness "lst";;              (* I costruttori sono distinti.            *)
+injectivity "lst";;               (* I costruttori sono iniettivi.           *)
+
+(* ------------------------------------------------------------------------- *)
+(* Lunghezza di una lista.                                                   *)
+(* ------------------------------------------------------------------------- *)
+
+let LEN = define
+  `LEN (Nil lst) = O /\
+   (!h:A t. LEN (Cons h t) = S (LEN t))`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Esempio:                                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+g `LEN (Cons O (Cons (S O) (Cons (S (S O)) Nil))) = S (S (S O))`;;
+e (REWRITE_TAC[LEN]);;
+top_thm ();;
+
+(* ------------------------------------------------------------------------- *)
+(* Concatenazione di due liste                                               *)
+(* ------------------------------------------------------------------------- *)
+
+let CONCAT = define
+  `(!l. CONCAT Nil l = l) /\
+   (!h:A t l. CONCAT (Cons h t) l = Cons h (CONCAT t l))`;;
+
+g `CONCAT (Cons O (Cons (S O) Nil)) (Cons (S (S (S O))) Nil) =
+          Cons O (Cons (S O) (Cons (S (S (S O))) Nil))`;;
+e (REWRITE_TAC[CONCAT]);;
+top_thm();;
+
+g `!l1 l2 l3:A lst. CONCAT (CONCAT l1 l2) l3 = CONCAT l1 (CONCAT l2 l3)`;;
+e (MATCH_MP_TAC lst_INDUCT);;
+e CONJ_TAC;;
+ e (REWRITE_TAC[CONCAT]);;
+e (INTRO_TAC "!a0 a1; hpind; !l2 l3");;
+e (HYP REWRITE_TAC "hpind" [CONCAT]);;
+let CONCAT_ASSOC = top_thm();;
+
+g `!l:A lst. CONCAT l Nil = l`;;
+e (MATCH_MP_TAC lst_INDUCT);;
+e CONJ_TAC;;
+ e (REWRITE_TAC[CONCAT]);;
+e (INTRO_TAC "!a0 a1; hpind");;
+e (HYP REWRITE_TAC "hpind" [CONCAT]);;
+let CONCAT_NIL = top_thm();;
+
+g `!l1 l2:A lst. LEN (CONCAT l1 l2) = PLUS (LEN l1) (LEN l2)`;;
+e (MATCH_MP_TAC lst_INDUCT);;
+e CONJ_TAC;;
+ e (REWRITE_TAC[CONCAT; LEN; PLUS]);;
+e (INTRO_TAC "!a0 a1; hpind; !l2");;
+e (HYP REWRITE_TAC "hpind" [CONCAT; LEN; PLUS]);;
+let LEN_CONCAT = top_thm ();;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizi:                                                                 *)
+(*  - Definire REV il rovesciamento di una lista.                            *)
+(*  - Dimostrare le seguenti proprieta':                                     *)
+(*    LEN_REV                                                                *)
+(*      |- !l:A lst. LEN (REV l) = LEN l                                     *)
+(*    REV_CONCAT                                                             *)
+(*      |- !l1 l2:A lst. REV (CONCAT l1 l2) = CONCAT (REV l2) (REV l1)       *)
+(*    REV_REV                                                                *)
+(*      |- !l:A lst. REV (REV l) = l                                         *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Somma di una lista di numeri naturali.                                    *)
+(* ------------------------------------------------------------------------- *)
+
+let SUM = define
+  `SUM Nil = O /\
+   (!h t. SUM (Cons h t) = PLUS h (SUM t))`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Enunciare e dimostare le ovvie proprieta' che legano SUM con CONCAT e REV *)
+(* Suggerimento: chiamare i teoremi SUM_CONCAT e SUM_REV.                    *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Predicati sugli elementi di una lista.                                    *)
+(* ------------------------------------------------------------------------- *)
+
+let LIST_ALL = define
+  `LIST_ALL P Nil = T /\
+   (!h:A t. LIST_ALL P (Cons h t) = (P h /\ LIST_ALL P t))`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Esempio: Dimostriamo che se la somma fa zero allora la lista contiene     *)
+(* soltanto elementi nulli.                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+g `!m n. PLUS m n = O <=> m = O /\ n = O`;;
+e (ASSERT_TAC "imp" `!m n. PLUS m n = O ==> m = O /\ n = O`);;
+ e INDUCTION_TAC;;
+  e (REWRITE_TAC[PLUS]);;
+ e (REWRITE_TAC[PLUS; distinctness "nat"]);;
+e (INTRO_TAC "!m n");;
+e EQ_TAC;;
+ e (HYP REWRITE_TAC "imp" []);;
+e (INTRO_TAC "e1 e2");;
+e (HYP REWRITE_TAC "e1 e2" [PLUS]);;
+let PLUS_EQ_ZERO = top_thm();;
+
+g `!l. SUM l = O <=> LIST_ALL (\x. x = O) l`;;
+e (MATCH_MP_TAC lst_INDUCT);;
+ e (REWRITE_TAC[SUM; LIST_ALL; PLUS_EQ_ZERO]);;
+e (INTRO_TAC "!a0 a1; hpind");;
+e (HYP REWRITE_TAC "hpind" []);;
+let SUM_EQ_ZERO = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizi:                                                                 *)
+(*  - Definire LIST_ANY P l che e' verificato se P e' vero su almeno un      *)
+(*    elemento di l.                                                         *)
+(*  - Dimostrare i seguenti teoremi:                                         *)
+(*      NOT_LIST_ALL                                                         *)
+(*        |- !P l. ~LIST_ALL P l <=> LIST_ANY (\x:A. ~P x) l                 *)
+(*      NOT_LIST_ANY                                                         *)
+(*        |- !P l. ~LIST_ANY P l <=> LIST_ALL (\x:A. ~P x) l                 *)
+(*  - Enunciare e dimostrare le ovvie relazioni tra LIST_ANY e LIST_ALL      *)
+(*    rispetto a CONCAT e REV:                                               *)
+(*    LIST_ANY_CONCAT, LIST_ALL_CONCAT, LIST_ANY_REV, LIST_ALL_REV           *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Filtrare una lista.                                                       *)
+(* ------------------------------------------------------------------------- *)
+
+let LIST_FILTER = define
+  `LIST_FILTER P Nil = Nil /\
+   (!h:A t. LIST_FILTER P (Cons h t) = if P h
+                                       then Cons h (LIST_FILTER P t)
+                                       else LIST_FILTER P t)`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizio: Dimostrare                                                     *)
+(*   LIST_ALL_IMP_LIST_FILTER_ID                                             *)
+(*     |- !P l:A lst. LIST_ALL P l ==> LIST_FILTER P l = l                   *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Operatore FOLD.                                                           *)
+(* ------------------------------------------------------------------------- *)
+
+let FOLD = define
+  `(!acc:A. FOLD f acc Nil = acc) /\
+   (!acc h:B t. FOLD f acc (Cons h t) = FOLD f (f h acc) t)`;;
+
+(* ------------------------------------------------------------------------- *)
+(* LEN e FOLD                                                                *)
+(* Dimostrazioni per induzione con rafforzamento delle ipotesi di induzione  *)
+(* (crossfertilizzazione).                                                   *)
+(* ------------------------------------------------------------------------- *)
+
+g `!l. LEN l = FOLD (\x:A acc. S acc) O l`;;
+e (MATCH_MP_TAC lst_INDUCT);;
+e CONJ_TAC;;
+ e (REWRITE_TAC[LEN; FOLD]);;
+e (INTRO_TAC "!a0 a1; hpind");;
+e (REWRITE_TAC[LEN; FOLD]);;
+(* Non funziona. *)
+
+(* Generalizziamo. *)
+g `!l n. FOLD (\x:A acc. S acc) n l = PLUS (LEN l) n`;;
+e (MATCH_MP_TAC lst_INDUCT);;
+e CONJ_TAC;;
+ e (REWRITE_TAC[LEN; FOLD; PLUS]);;
+e (INTRO_TAC "!a0 a1; hpind");;
+e (REWRITE_TAC[LEN; FOLD; PLUS]);;
+e (HYP REWRITE_TAC "hpind" []);;
+e (REWRITE_TAC[PLUS_S]);;
+let LEN_EQ_PLUS_LEMMA = top_thm();;
+
+g `!l. LEN l = FOLD (\x:A acc. S acc) O l`;;
+e (REWRITE_TAC[LEN_EQ_PLUS_LEMMA]);;
+e (REWRITE_TAC[PLUS_ZERO]);;
+let LEN_EQ_FOLD = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------- *)
+
+g `!f l1 l2:A lst acc:B. FOLD f acc (CONCAT l1 l2) = FOLD f (FOLD f acc l1) l2`;;
+e (INTRO_TAC "!f");;
+e (MATCH_MP_TAC lst_INDUCT);;
+e CONJ_TAC;;
+ e (REWRITE_TAC[CONCAT; FOLD]);;
+e (INTRO_TAC "!a0 a1; hpind; !l2 acc");;
+e (REWRITE_TAC[CONCAT; FOLD]);;
+e (HYP REWRITE_TAC "hpind" []);;
+let FOLD_CONCAT = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* CONCAT e FOLD.                                                            *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizio: Dimostrare                                                     *)
+(*   CONCAT_EQ_FOLD                                                          *)
+(*     |- !l1 l2:A lst. CONCAT l1 l2 = FOLD Cons l2 (REV l1)                 *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* REV e FOLD                                                                *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Esercizio: Dimostrare                                                     *)
+(*   REV_EQ_FOLD                                                             *)
+(*     |- !l:A lst. REV l = FOLD Cons Nil l                                  *)
+(* Suggerimento: Provare per induzione per trovare la crossfertilizzazione.  *)
+(* ------------------------------------------------------------------------- *)
+

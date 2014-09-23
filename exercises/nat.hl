@@ -1,0 +1,90 @@
+(* ========================================================================= *)
+(* Tutorial on natural numbers.                                              *)
+(* ========================================================================= *)
+
+let nat_INDUCTION,nat_RECURSION = define_type
+  "nat = O
+       | S nat";;
+
+(* ------------------------------------------------------------------------- *)
+(* Proprieta' conseguenti al principio di induzione e di ricorsione          *)
+(* per il tipo nat.                                                          *)
+(* ------------------------------------------------------------------------- *)
+
+cases "nat";;
+distinctness "nat";;
+injectivity "nat";;
+
+(* ------------------------------------------------------------------------- *)
+(* Definizione di addizione, moltiplicazione e sottrazione.                  *)
+(* ------------------------------------------------------------------------- *)
+
+let PLUS = define
+  `(!n. PLUS O n = n) /\
+   (!m n. PLUS (S m) n = S (PLUS m n))`;;
+
+let TIMES = define
+  `(!n. TIMES O n = O) /\
+   (!m n. TIMES (S m) n = PLUS (TIMES m n) n)`;;
+
+let PRED = define
+  `PRED O = O /\
+   (!n. PRED (S n) = n)`;;
+
+let MINUS = define
+  `(!m. MINUS m O = m) /\
+   (!m n. MINUS m (S n) = PRED (MINUS m n))`;;
+
+(* ------------------------------------------------------------------------- *)
+(* Dimostrazione di alcune proprieta' elementari.                            *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. PLUS n O = n`;;
+e (MATCH_MP_TAC nat_INDUCTION THEN CONJ_TAC);;
+e (REWRITE_TAC[PLUS]);;
+e (INTRO_TAC "!a; Ha");;
+e (REWRITE_TAC[PLUS]);;
+e (HYP REWRITE_TAC "Ha" []);;
+let PLUS_ZERO = top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Poiche' molte dimostrazioni si fanno per induzione, e' comodo definire    *)
+(* una tattica apposita.                                                     *)
+(* ------------------------------------------------------------------------- *)
+
+let X_INDUCTION_TAC v = 
+  MATCH_MP_TAC nat_INDUCTION THEN CONJ_TAC THENL
+  [ALL_TAC; X_GEN_TAC v THEN DISCH_THEN (LABEL_TAC (name_of v^"_ind"))];;
+
+let INDUCTION_TAC : tactic =
+  fun (asl,w) as gl ->
+    let v = fst(dest_forall w) in
+    X_INDUCTION_TAC v gl;;
+
+(* ------------------------------------------------------------------------- *)
+(* Nuova dimostrazione di PLUS_ZERO usando INDUCTION_TAC.                    *)
+(* ------------------------------------------------------------------------- *)
+
+g `!n. PLUS n O = n`;;
+e INDUCTION_TAC;;
+e (REWRITE_TAC[PLUS]);;
+e (HYP REWRITE_TAC "n_ind" [PLUS]);;
+let PLUS_ZERO = top_thm();;
+
+g `!m n. PLUS m (S n) = S (PLUS m n)`;;
+e INDUCTION_TAC;;
+e (REWRITE_TAC[PLUS]);;
+e (HYP REWRITE_TAC "m_ind" [PLUS]);;
+let PLUS_S = top_thm();;
+
+g `!m n. PLUS m n = PLUS n m`;;
+e INDUCTION_TAC;;
+e (REWRITE_TAC[PLUS; PLUS_ZERO]);;
+e (HYP REWRITE_TAC "m_ind" [PLUS; PLUS_S]);;
+let PLUS_COMMUTATIVE = top_thm();;
+
+g `!m n p. PLUS m (PLUS n p) = PLUS (PLUS m n) p`;;
+e INDUCTION_TAC;;
+e (REWRITE_TAC[PLUS]);;
+e (HYP REWRITE_TAC "m_ind" [PLUS]);;
+let PLUS_ASSOC = top_thm();;

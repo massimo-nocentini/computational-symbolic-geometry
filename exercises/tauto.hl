@@ -1,0 +1,181 @@
+(* ========================================================================= *)
+(* Calcolo proposizionale.                                                   *)
+(* ========================================================================= *)
+
+(* ------------------------------------------------------------------------- *)
+(* Il calcolo proposizionale e' quel frammento della logica i cui enunciati  *)
+(* sono costituiti soltanto da variabili e dai seguenti connettivi logici.   *)
+(* `T`        vero                                                           *)
+(* `F`        falso                                                          *)
+(* `P ==> Q`  implicazione  "P implica Q"                                    *)
+(* `P <=> Q`  equivalenza   "P se e solo se Q"                               *)
+(* `P /\ Q`   congiunzione  "P e Q"                                          *)
+(* `P \/ Q`   disgiunzione  "P o Q"                                          *)
+(* `~P`       negazione     "non P"                                          *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* Implicazione e congiunzione                                               *)
+(*                                                                           *)
+(* Useremo due tattiche INTRO_TAC e MATCH_ACCEPT_TAC e MATCH_MP_TAC.         *)
+(* Impariamo il loro effetto dagli esempi.  Ogni comando e' anticipato da un *)
+(* commento che lo spiega e ne da' la traduzione approssimativa in           *)
+(* linguaggio naturale.                                                      *)
+(* ------------------------------------------------------------------------- *)
+
+(* Dimostriamo la proprieta' commutativa della congiunzione. *)
+(* Il comando g introduce un nuovo "goal".  Accetta come argomento un termine
+   che e' l'enuciato da dimostrare. *)
+g `!P Q. P /\ Q ==> Q /\ P`;;
+
+(* Possiamo fissare `P` e `Q` e assumere `P` e `Q`.                          *)
+(* Chiamiamo hp1 e hp2 le ipotesi corrispondenti                             *)
+(* Il comando e esegue una tattica, in questo caso la tattica INTRO_TAC che  *)
+(* "introduce" le ipotesi.                                                   *)
+e (INTRO_TAC "!P Q; hp1 hp2");;
+
+(* Per dimostrare `P /\ Q` dimostriamo separatamente `Q` e `P`. *)
+e CONJ_TAC;;
+
+(* Nel primo caso usiamo hp2. *)
+e (USE_THEN "hp2" MATCH_ACCEPT_TAC);;
+ 
+(* Nel secondo caso usiamo hp2. *)
+e (USE_THEN "hp1" MATCH_ACCEPT_TAC);;
+
+(* Finito, vediamo il teorema che abbiamo ottenuto. *)
+(* Il comando top_thm() fornisce il teorema appena dimostrato. *)
+top_thm();;
+
+(* Dimostrazione della proprieta' simmetrica della congiunzione senza tattiche. *)
+GEN_ALL (DISCH_ALL (CONJ (CONJUNCT2 (ASSUME `P /\ Q`)) (CONJUNCT1 (ASSUME `P /\ Q`))));;
+
+(* Dimostrazione usando REWRITE. *)
+g `!P Q. P /\ Q ==> Q /\ P`;;
+e (INTRO_TAC "!P Q; hp1 hp2");;
+e (HYP REWRITE_TAC "hp1" []);;
+e (HYP REWRITE_TAC "hp2" []);;
+top_thm();;
+
+(* Dimostrazione usando SIMP. *)
+g `!P Q. P /\ Q ==> Q /\ P`;;
+e (SIMP_TAC[]);;
+top_thm();;
+
+(* Regola transitiva per l'implicazione. *)
+g `!P Q R. (P ==> Q) /\ (Q ==> R) ==> (P ==> R)`;;
+
+e (INTRO_TAC "!P Q R; pq qr");;
+(* Assumiamo che `P ==> Q` e `Q ==> R` siano vere.  Chiamiamole pq e qr. *)
+
+e (INTRO_TAC "p");;
+(* Assumiamo che `P` sia vera.  Chiamiamola p. *)
+
+e (USE_THEN "qr" MATCH_MP_TAC);;
+(* Usiamo `Q ==> R` per dimostrare R.  Dobbiamo quindi dimostrare Q. *)
+
+e (USE_THEN "pq" MATCH_MP_TAC);;
+(* Usiamo `P ==> Q` per dimostrare Q.  Dobbiamo quindi dimostrare R. *)
+
+e (USE_THEN "p" MATCH_ACCEPT_TAC);;
+(* Usiamo P per dimostrare p.  Abbiamo finito. *)
+
+top_thm();;
+
+(* Dimostrazione del teorema precedente con SIMP. *)
+g `!P Q R. (P ==> Q) /\ (Q ==> R) ==> (P ==> R)`;;
+e (SIMP_TAC[]);;
+top_thm();;
+
+(* Esercizio: Dimostrare la legge associativa per la congiunzione. *)
+g `!P Q R. P /\ (Q /\ R) ==> (P /\ Q) /\ R`;;
+(* Esercizio: *)
+(* ... *)
+top_thm();;
+
+(* Esercizio: Dimostrare questo enunciato. *)
+g `!P Q. P ==> (Q ==> P)`;;
+(* Esercizio: *)
+(* ... *)
+top_thm();;
+
+(* ------------------------------------------------------------------------- *)
+(* Uso della disgiunzione.                                                   *)
+(* ------------------------------------------------------------------------- *)
+
+(* Proprieta' simmetrica della disgiunzione. *)
+(* Osservazione: `\/` ha precedenza su `==>`. *)
+g `!P Q. P \/ Q ==> Q \/ P`;;
+
+(* Usiamo la tattica intro ma con la sintassi "...|..." *)
+(* In altre parole dividiamo due casi:
+   Prima supponendo `P` dimostriamo `Q \/ P`.
+   Poi supponendo `Q` dimostriamo `Q \/ P`. *)
+e (INTRO_TAC "!P Q; p|q");;
+
+(* Per dimostare `Q \/ P` dimostriamo `P`. *)
+e DISJ2_TAC;;
+e (USE_THEN "p" MATCH_ACCEPT_TAC);;
+
+(* Per dimostare `Q \/ P` dimostriamo `Q`. *)
+e DISJ1_TAC;;
+e (USE_THEN "q" MATCH_ACCEPT_TAC);;
+
+top_thm();;
+
+(* Dimostrazione alternativa usando SHOW_TAC *)
+g `P \/ Q ==> Q \/ P`;;
+e (INTRO_TAC "p|q");;
+e (SHOW_TAC `P:bool`);;
+ e (USE_THEN "p" MATCH_ACCEPT_TAC);;
+e (SHOW_TAC `Q:bool`);;
+e (USE_THEN "q" MATCH_ACCEPT_TAC);;
+top_thm();;
+
+g `!P Q R. P \/ (Q \/ R) ==> (P \/ Q) \/ R`;;
+(* Esercizio: *)
+(* ... *)
+top_thm();;
+
+g `!P Q R. (P \/ Q) \/ R ==> P \/ (Q \/ R)`;;
+(* Esercizio: *)
+(* ... *)
+top_thm();;
+
+
+(* Proprieta' distributiva della congiunzione sulla disgiunzione. *)
+(* Osservazione: `/\` ha precedenza su `\/` come la moltiplicazione ha
+   precedenza sull'addizione.
+   Entrambi /\ e \/ hanno precedenza su ==>. *)
+g `!P Q R. P /\ (Q \/ R) ==> P /\ Q \/ P /\ R`;;
+(* Esercizio: *)
+(* ... *)
+top_thm();;
+
+
+g `!P Q R. P \/ Q /\ R ==> (P \/ Q) /\ (P \/ R)`;;
+(* Esercizio: *)
+(* ... *)
+top_thm();;
+
+(* Esercizio: enunciare e dimostrare la proprieta' associativa della
+   disgiunzione. *)
+
+(* Esercizio: enunciare e dimostrare la proprieta' distributiva della
+   disgiunzione sulla congiunzione. *)
+
+(* ------------------------------------------------------------------------- *)
+(* Adesso dovremmo spiegare negazione ed equivalenza, ma lo faremo piu'      *)
+(* avanti.  Per il momento questo e' sufficiente sulla logica                *)
+(* proposizionale.                                                           *)
+(* ------------------------------------------------------------------------- *)
+
+(* ------------------------------------------------------------------------- *)
+(* La logica proposizionale e' decidibile.  La regola TRIVIAL e' capace di   *)
+(* dimostrare qualsiasi teorema di logica proposizionale.  Tutti i teoremi   *)
+(* Visti in questo file si sarebbero potuti dimostrare con TRIVIAL.          *)
+(* ------------------------------------------------------------------------- *)
+
+g `!P Q. P \/ Q <=> Q \/ P`;;
+e (BY TRIVIAL "" []);;
+top_thm ();;

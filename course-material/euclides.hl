@@ -1,0 +1,72 @@
+(* ========================================================================= *)
+(* Teorema di Euclide sui numeri primi.                                      *)
+(* ========================================================================= *)
+
+type_invention_error := false;;
+loadt "Library/prime.ml";;
+loadt "100/fta.ml";;
+type_invention_error := true;;
+prioritize_num();;
+
+(* ------------------------------------------------------------------------- *)
+(* Lemmata.                                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+g `!a b. a divides a * b`;;
+e (REWRITE_TAC[divides]);;
+e (BY TRIVIAL "" []);;
+let DIVIDES_MUL_LEFT = top_thm();;
+
+g `!a b. a divides b * a`;;
+e (REWRITE_TAC[divides]);;
+e (BY TRIVIAL "" [MULT_SYM]);;
+let DIVIDES_MUL_RIGHT = top_thm();;
+
+g `!s f x:A. FINITE s /\ x IN s ==> f x divides nproduct s f`;;
+e (INTRO_TAC "!f");;
+e (CUT_TAC `!s. FINITE s ==> !x:A. x IN s ==> f x divides nproduct s f`);;
+ e (BY TRIVIAL "" []);;
+e (APPLY_TAC FINITE_INDUCT_STRONG);;
+e (REWRITE_TAC[NOT_IN_EMPTY; IN_INSERT]);;
+e (SIMP_TAC[NPRODUCT_CLAUSES]);;
+e (BY TRIVIAL "" [DIVIDES_MUL_LEFT; DIVIDES_MUL_RIGHT; DIVIDES_TRANS]);;
+let DIVIDES_NPRODUCT = top_thm();;
+
+g `!s f:A->num. FINITE s ==> (nproduct s f = 0 <=> (?x. x IN s /\ f x = 0))`;;
+e (INTRO_TAC "!f");;
+e (APPLY_TAC FINITE_INDUCT_STRONG);;
+e (REWRITE_TAC[NOT_IN_EMPTY; IN_INSERT]);;
+e (SIMP_TAC[NPRODUCT_CLAUSES]);;
+e (SHOW_TAC `~(1 = 0)`);;
+ e (BY ARITH_RULE "" []);;
+e (INTRO_TAC "!x s; ind notin fin");;
+ e (REWRITE_TAC[MULT_EQ_0]);;
+e (BY TRIVIAL "ind" []);;
+let NPRODUCT_EQ_0_EQ = top_thm();; 
+
+(* ------------------------------------------------------------------------- *)
+(* Teorema di euclide sui numeri primi.                                      *)
+(* ------------------------------------------------------------------------- *)
+
+g `INFINITE {p | prime p}`;;
+e (REWRITE_TAC[INFINITE]);;
+e (INTRO_TAC "fin");;
+e (ABBREV_TAC `q = nproduct {p | prime p} I + 1`);;
+e (ASSERT_TAC "qneq1" `~(q = 1)`);;
+ e (CUT_TAC `1 < nproduct {p | prime p} I`);;
+  e (BY ARITH_RULE "q" []);;
+ e (CUT_TAC `~(nproduct {p | prime p} I = 0) /\ ~(nproduct {p | prime p} I = 1)`);;
+  e (BY ARITH_RULE "" []);;
+ e (HYP SIMP_TAC "fin" [NPRODUCT_EQ_0_EQ; NPRODUCT_EQ_1_EQ]);;
+ e (REWRITE_TAC[IN_ELIM_THM; I_THM]);;
+ e (BY TRIVIAL "" [PRIME_0; PRIME_2; ARITH_RULE `~(2 = 1)`]);;
+e (ASSERT_TAC "@p. prime factor" `?p. prime p /\ p divides q`);;
+ e (BY TRIVIAL "qneq1" [PRIME_FACTOR]);;
+e (CUT_TAC `p divides 1`);;
+ e (BY TRIVIAL "prime" [DIVIDES_ONE; PRIME_1]);;
+e (HAVE_TAC `I p divides nproduct {p | prime p} I`);;
+ e (APPLY_TAC DIVIDES_NPRODUCT);;
+ e (HYP REWRITE_TAC "fin prime" [IN_ELIM_THM]);;
+e (REWRITE_TAC[I_THM]);;
+e (BY TRIVIAL "q factor" [DIVIDES_ADD_REVR]);;
+let EUCLID_THM = top_thm();;
