@@ -45,6 +45,29 @@ function! EvaluateVisualSelection()
     echo system('echo "let val_visual_selection = '.visual_selected_text.';;" > /tmp/hol_light')
 endfunction
 
+function! EvaluateVisualSelectionAsGoal() 
+    let visual_selected_text = getline("'<")[getpos("'<")[2]-1:getpos("'>")[2]-1]
+    let visual_selected_text = substitute(visual_selected_text, '`', '\\`', "g")
+    " echo visual_selected_text
+
+    " it is interesting to observe that in the substitution we've to use escaping
+    " on \ (ie, we write \\) inside '...' literal string construction, which means 
+    " that string concat operator maybe handle string not in their literal form,
+    " otherwise a simpler '\`' would have been sufficient.
+    echo system('echo "g ('.visual_selected_text.');;" > /tmp/hol_light')
+
+    " the following is the former version that assumed to consume a naked term, 
+    " without its backticks `...`
+    " echo system('echo "g (\`'.visual_selected_text.'\`);;" > /tmp/hol_light')
+endfunction
+
+function! ApplyVisualSelectionAsTactic() 
+    let visual_selected_text = getline("'<")[getpos("'<")[2]-1:getpos("'>")[2]-1]
+    let visual_selected_text = substitute(visual_selected_text, '`', '\\`', "g")
+    " echom visual_selected_text
+    echo system('echo "e ('.visual_selected_text.');;" > /tmp/hol_light')
+endfunction
+
 function! PrintGoalStack() range
     echo system('echo "let val_goalstack_ = p ();;" > /tmp/hol_light')
 endfunction
@@ -53,5 +76,7 @@ endfunction
 :nmap <F3> :call EvaluateWordUnderCursor()<CR>
 :vmap <F4> :call EvaluateVisualSelection()<CR>
 :nmap <F5> :call SendExpressionToFifoDevice()<CR>
-:nmap <F6> :call UndoTacticApplication()<CR>
-:nmap <F7> :call PrintGoalStack()<CR>
+:vmap <F6> :call EvaluateVisualSelectionAsGoal()<CR>
+:vmap <F7> :call ApplyVisualSelectionAsTactic()<CR>
+:nmap <F8> :call UndoTacticApplication()<CR>
+:nmap <F9> :call PrintGoalStack()<CR>

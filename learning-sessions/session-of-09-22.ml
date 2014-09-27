@@ -63,3 +63,5 @@ e(ASM_MESON_TAC[LE_MULT2; MULT_EQ_0; ARITH_RULE `2 * x <= x <=> x = 0`]);;
 WF;;
 
 WF_IND;;
+
+GEN;;
