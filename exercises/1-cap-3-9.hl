@@ -271,10 +271,10 @@ EXP_ZERO_CONV `2 EXP (2 EXP (2 EXP (2 EXP 2))) EXP 0`;;
 (* ------------------------------------------------------------------------- *)
 
 REWRITE_CONV [] `if x /\ T <=> x then (!x. F ==> x+1=2) else y \/ F`;;
-REWRITE_CONV [ASSUME `0+0+0=0`] `0+0 = 0+0+0`;;
-REWRITE_CONV [ASSUME `0+0+0=0`] `0+0+0+0+0 = 0+0+0`;;
-REWRITE_CONV [ARITH_RULE `0+0+0=0`] `0+0 = 0+0+0`;;
-REWRITE_CONV [ASSUME `!a b c. a+b+c=0`] `0+0+0+0+0 = 0+0+0`;;
+REWRITE_CONV [ASSUME `0+0+0=0`] `0+0 = 0+0+0`;; (* 0 + 0 + 0 = 0 |- 0 + 0 = 0 + 0 + 0 <=> 0 + 0 = 0 *)
+REWRITE_CONV [ASSUME `0+0+0=0`] `0+0+0+0+0 = 0+0+0`;; (* 0 + 0 + 0 = 0 |- 0 + 0 + 0 + 0 + 0 = 0 + 0 + 0 <=> T *)
+REWRITE_CONV [ARITH_RULE `0+0+0=0`] `0+0 = 0+0+0`;; (* |- 0 + 0 = 0 + 0 + 0 <=> 0 + 0 = 0  *)
+REWRITE_CONV [ASSUME `!a b c. a+b+c=0`] `0+0+0+0+0 = 0+0+0`;; (* !a b c. a + b + c = 0 |- 0 + 0 + 0 + 0 + 0 = 0 + 0 + 0 <=> T *)
 
 
 (* ========================================================================= *)
@@ -300,7 +300,7 @@ e (CONV_TAC NUM_LT_CONV);;
 
 g `2+2=4 /\ 2<3`;;
 e (CONV_TAC (BINOP_CONV NUM_REDUCE_CONV));;
-e (REWRITE_TAC[])  (oppure CONV_TAC TAUT  OPPURE MESON_TAC[])
+e (REWRITE_TAC[]);;  (oppure CONV_TAC TAUT  OPPURE MESON_TAC[])
 
 g `2+2=4 /\ 2<3`;;
 e (CONV_TAC NUM_REDUCE_CONV);;  (* Oppure NUM_REDUCE_TAC *)
@@ -326,7 +326,7 @@ e (MESON_TAC[]);;
 (* ------------------------------------------------------------------------- *)
 
 g `0=1 ==> 1=0`;;
-e DISCH_TAC
+e DISCH_TAC;;
 e (ASM_REWRITE_TAC[]);;
 
 g `0=1 ==> 1=0`;;
@@ -418,7 +418,6 @@ e (ASM_REWRITE_TAC[]);;
 e STRIP_TAC;;
 e (ASM_REWRITE_TAC[]);;
 e (ASM_REWRITE_TAC[]);;
-
 g `p \/ q <=> q \/ p`;;
 e (EQ_TAC THEN STRIP_TAC THEN ASM_REWRITE_TAC[]);;
 
@@ -446,6 +445,21 @@ e (MESON_TAC[LE_CASES; SUB_EQ_0]);;
 (* Enunciare e dimostrare il seguente teorema:                               *)
 (* "La somma degli interi da 1 a n maggiore o uguale ad n."                  *)
 (* ------------------------------------------------------------------------- *)
+g `(!)(\n. nsum (1..n) (\i. i) >= n)`;;
+e (MATCH_MP_TAC num_INDUCTION);;
+e (REWRITE_TAC [NSUM_CLAUSES_NUMSEG]);;
+(*
+ The following one doesn't make any advantage respect REWRITE_TAC,
+ since the context haven't rewriting information SIMP_TAC could use for.
+e (SIMP_TAC [NSUM_CLAUSES_NUMSEG]);;
+ *)
+e ARITH_TAC;;
+
+let SUM_ONE_UPTO_N_GREATER_THAN_N = 
+    prove (`(!)(\n. nsum (1..n) (\i. i) >= n)`,
+        (MATCH_MP_TAC num_INDUCTION) 
+        THEN (REWRITE_TAC [NSUM_CLAUSES_NUMSEG])
+        THEN ARITH_TAC);;
 
 (* ------------------------------------------------------------------------- *)
 (* Rifare parte della teoria dei numeri pari e dispari.                      *)
@@ -465,8 +479,35 @@ e (MESON_TAC[LE_CASES; SUB_EQ_0]);;
 (* Thm: n+2 e' pari se e solo se n e' pari.                                  *)
 (* Thm: n+2 e' dispari se e solo se n e' dispari.                            *)
 (* ------------------------------------------------------------------------- *)
+let PARI = new_definition `!n. PARI n <=> (?m. n = 2*m)`;;
+let DISPARI = new_definition `!n. DISPARI n <=> (?m. n = SUC (2*m))`;;
 
+(* Zero e' pari *)
+let ZERO_IS_PARI = 
+    prove (`PARI 0`, 
+        (REWRITE_TAC [PARI])
+        THEN (EXISTS_TAC `0`)
+        THEN ARITH_TAC);;
 
+let ZERO_IS_NOT_DISPARI =
+    prove (`~ DISPARI 0`,
+        REWRITE_TAC [DISPARI]
+        THEN STRIP_TAC
+        THEN FIRST_X_ASSUM MP_TAC 
+        THEN ARITH_TAC);;
+
+let N_PARI_IMP_SUC_N_DISPARI = 
+    prove (` !n. PARI n ==> DISPARI (SUC n)`,
+        REWRITE_TAC [PARI; DISPARI; ARITH]
+        GEN_TAC
+        DISCH_TAC
+        MATCH_MP_TAC num_INDUCTION
+        INDUCT_TAC
+            DISCH_TAC
+            EXISTS_TAC `0`
+            ARITH_TAC
+
+            DISCH_TAC
 (* ========================================================================= *)
 (* 9. HOL number systems                                                     *)
 (* ========================================================================= *)

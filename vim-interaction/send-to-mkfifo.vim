@@ -11,7 +11,10 @@ function! DumpLinesFirst() range
   
 function! SendExpressionToFifoDevice() range
     let start = line('.')
-    let end = search(';;\s*$') 
+    " searching flags: 
+    " `c` for accepting matching at cursor position
+    " `s` to set a mark ' at the previous location
+    let end = search(';;\s*$', 'cs') 
     echo system('sed -n '.start.','.end.'p '.expand('%').' > /tmp/hol_light')
     let pos = setpos(".", [0, (end+1), 1, 0])
 endfunction
