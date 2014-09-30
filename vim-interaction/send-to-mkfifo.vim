@@ -11,9 +11,9 @@ function! DumpLinesFirst() range
   
 function! SendExpressionToFifoDevice() range
     let start = line('.')
-    let end = search('^$') - 1
+    let end = search(';;\s*$') 
     echo system('sed -n '.start.','.end.'p '.expand('%').' > /tmp/hol_light')
-    let pos = setpos(".", [0, (end+2), 1, 0])
+    let pos = setpos(".", [0, (end+1), 1, 0])
 endfunction
 
 function! UndoTacticApplication() range
@@ -42,6 +42,7 @@ endfunction
 
 function! EvaluateVisualSelection() 
     let visual_selected_text = getline("'<")[getpos("'<")[2]-1:getpos("'>")[2]-1]
+    let visual_selected_text = substitute(visual_selected_text, '`', '\\`', "g")
     echo system('echo "let val_visual_selection = '.visual_selected_text.';;" > /tmp/hol_light')
 endfunction
 

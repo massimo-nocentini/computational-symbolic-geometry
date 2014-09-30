@@ -25,14 +25,21 @@
 (* 3. HOL Basics                                                             *)
 (* ========================================================================= *)
 
-subst [`T`,`F`] `b = F`;;
-subst [`a:A`,`1`] `1+1`;;
+let expected = `b = T` in
+let true = expected = subst [`T`,`F`] `b = F` in ();;
 
+let expected = `a + a` in
+let true = expected = subst [`a:num`,`1`] `1+1` in ();;
+
+(*
+ In the following we do not check by pattern matching since invented type 
+ variables are different each time .
+ *)
 type_of `2+2`;;
 type_of `(a, (a < b))`;;
 type_of `x:num = y`;;
 type_of `x = y`;;
-type_of `x:A`;;
+type_of `x:A`;; (* `:A` *)
 type_of `x`;;
 type_of `% x`;;
 type_of `% x = y`;;
@@ -48,33 +55,44 @@ type_of `f (x + 1):A`;;
 (* ------------------------------------------------------------------------- *)
 
 ASSUME `1+1=0`;;
-ASSUME `x + 1`;;
+ASSUME `(x + 1) `;; (* not a proposition *)
 ASSUME `p:bool`;;
-ASSUME `p:A`;;
-ASSUME `p`;;
+ASSUME `p:A`;; (* not a proposition *)
+ASSUME `p`;; (* not a proposition *)
 ASSUME `f x : bool`;;
-ASSUME `f (x:A)`;;
+ASSUME `f (x:A)`;; (* not a proposition *)
 
 REFL `0`;;
 REFL `x:A`;;
-REFL `x`;;
-REFL 0;;
+REFL `x`;; (* invented type variable *)
+REFL 0;; (* 0 isn't a hol term *)
 REFL `0 = 0`;;
 
 INST [`1`, `x:num`] (REFL `x + 1`);;
-INST [`1`, `x:real`] (ASSUME `x + 1 = 0`);;
-INST [`y:real`, `x:real`] (ASSUME `x = 0`);;
-INST [`y:real`, `x:real`] (ASSUME `x = y`);;
-INST [`x+1`, `x+1`] (REFL `x + 1`);;
-INST [`2`, `x:num`] `x+1`;;
+INST [`1`, `x:real`] (ASSUME `x + 1 = 0`);; (* bad substitution list: `1:num` while `x:real` *)
+INST [`1`, `x:num`] (ASSUME `x + 1 = 0`);;  (* thm = 1 + 1 = 0 |- 1 + 1 = 0  *)
+INST [`&1`, `x:real`] (ASSUME `x + 1 = 0`);; (* thm = x + 1 = 0 |- x + 1 = 0 , no instantiation while substitution list okay! *)
+INST [`y:real`, `x:real`] (ASSUME `x = 0`);; (* again, no instantiation *)
+let term_zero = (rand (concl (ASSUME `x = 0`))) in ()
+type_of (rand (rand (concl (ASSUME `x = 0`))));; (* `x` has type `:num` *)
+
+INST [`y:real`, `x:real`] (ASSUME `x = y`);; (* again, no instantiation *)
+INST [`y:real`, `x:real`] (ASSUME `x:A = y`);; (* again, no instantiation *)
+INST [`y:real`, `x:real`] (ASSUME `x:real = y`);;  
+(* type_of (rand (rand (concl (INST [`y:real`, `x:real`] (ASSUME `x = y`)))));; (* `x` has type `:real` *) *)
+INST [`x+1`, `x+1`] (REFL `x + 1`);; (* bad substitution list: attempting to substitute non-free variable, ie a combination *)
+INST [`y:num `, `x:num`] (REFL `x + 1`);; 
+INST [`76`, `x:num`] (REFL `x + 1`);; 
+INST [`76`, `x:num + 1`] (REFL `x + 1`);; (* bad substitution, again applied to non-free variable *)
+INST [`2`, `x:num`] `x+1`;; (* type checking error: `x + 1` is not a theorem *)
 
 concl (REFL `x+1`);;
 concl (ASSUME `x=0`);;
 type_of (concl (REFL `0`));;
-type_of (REFL `0`);;
+type_of (REFL `0`);; (* type checking error, a theorem hasn't a type in hol because isn't a term *)
 
-ARITH_RULE `x - x - 1 = 0`;;
-ARITH_RULE `x - (x - 1) = 0`;;
+ARITH_RULE `x - x - 1 = 0`;; (* provable since subtraction is implemented via "cut-off" for `num`s *)
+ARITH_RULE `x - (x - 1) = 0`;; (* a contraddiction *)
 
 
 (* ========================================================================= *)
@@ -87,22 +105,22 @@ ARITH_RULE `x - (x - 1) = 0`;;
 (* ==>, <=>, /\, \/, =, +, - *, /                                            *)
 (* ------------------------------------------------------------------------- *)
 
-TAUT `x > 1 <=> x > 1`;;
+TAUT `x > 1 <=> x > 1`;; (* provable because asserting on the same term `x > 1` seen as a whole *)
 ARITH_RULE `x > 1 <=> x > 1`;;
 
-TAUT `x > 2 ==> x > 1`;;
-ARITH_RULE `x > 2 ==> x > 1`;;
+TAUT `x > 2 ==> x > 1`;; (* unsolved goal since TAUT doesn't know anything about `>` relation *)
+ARITH_RULE `x > 2 ==> x > 1`;; (* while ARITH_RULE  does *)
 
 ARITH_RULE `x:A = x`;;
 TAUT `x:A = x`;;
-TAUT `x = x:bool`;;
+TAUT `x = x:bool`;; (* since ` <=> ` is implemented as equality, this is what the printer really draws *)
 
 (* ------------------------------------------------------------------------- *)
 (* Qual e' la differenza tra questi tre teoremi?                             *)
 (* ------------------------------------------------------------------------- *)
 
 CONJ (ASSUME `p:bool`) (ASSUME `p:bool`);;
-ASSUME `p /\ p`;;
+ASSUME `p /\ p`;; (* `p /\ p` is in the assumptions too, while the other have only `p` *)
 MP (TAUT `p ==> p /\ p`) (ASSUME `p:bool`);;
 
 
@@ -117,88 +135,120 @@ type_of `(=) 3`;;
 type_of `~a,b+1`;;
 
 mk_comb (`(<=>) p`, `1=0`);;
-mk_comb (`(<=>) p`, `n:num`);;
+mk_comb (`(<=>) p`, `n:num`);; (* `n` is required to be a `:bool` *)
 mk_comb (`(<=>) p`, `q:bool`);;
-mk_comb (`(<=>) p`, `q`);;
+mk_comb (`(<=>) p`, `q`);; (* `q` cannot be any type *)
 mk_comb (mk_comb (`(+)`,`1`), `2`);;
+mk_comb (`(+) 1`, `2`);; (* equivalent to the previous one *)
 REFL (mk_comb (mk_comb (`(+)`,`1`), `2`));;
 
 mk_eq (`1`, `a+2`);;
-mk_eq (`x`, `a+2`);;
+mk_eq (`x`, `a+2`);; (* `x` should have type `:num` *)
+mk_eq (`x:num`, `a+2`);; 
 mk_eq (`1`, mk_comb (`(+) a`, `2`));;
 ASSUME (mk_eq (`1`, `a+2`));;
 
-CONJ_PAIR (ASSUME `x = y /\ q`);;
-CONJ_PAIR (REFL `p /\ q`);;
+CONJ_PAIR (ASSUME `x = y /\ q`);; (* `/\` has lower precedence respect to `=` *)
+CONJ_PAIR (REFL `p /\ q`);; (* not a conjunction *)
 
-MK_COMB (REFL `(+) 2`, ASSUME `x = 1`);;
-MK_COMB (REFL `(+) 2`, ASSUME `x = y`);;
-MK_COMB (REFL `(+) 2`, ARITH_RULE `3+2=5`);;
+MK_COMB (REFL `(+) 2`, ASSUME `x = 1`);;  (* x = 1 |- 2 + x = 2 + 1, combination happens only in the concl *)
+MK_COMB (REFL `(+) 2`, ASSUME `x = y`);; (* `x` and `y` haven't type `:num` *)
+MK_COMB (REFL `(+) 2`, ASSUME `x:num = y`);;
+MK_COMB (REFL `(+) 2`, ARITH_RULE `3+2=5`);; (* |- 2 + 3 + 2 = 2 + 5, no assumptions created by ARITH_RULE *)
 MK_COMB (MK_COMB (REFL `(+)`, REFL `x:num`), ARITH_RULE `1+1=2`);;
 
-fst (dest_comb `1 + x`);;
-snd (dest_comb `1 + x`);;
+fst (dest_comb `1 + x`);; (* `(+) 1` *)
+snd (dest_comb `1 + x`);; (* `x` *)
 
-CONJ_PAIR `p /\ q`;;
-CONJ_PAIR (ASSUME `p /\ q`);;
+CONJ_PAIR `p /\ q`;; (* type checking error, a theorem is expected *)
+CONJ_PAIR (ASSUME `p /\ q`);; (* thm * thm = (p /\ q |- p, p /\ q |- q) *)
 fst (CONJ_PAIR (ASSUME `p /\ q`));;
-concl (fst (CONJ_PAIR (ASSUME `p /\ q`)));;
+concl (fst (CONJ_PAIR (ASSUME `p /\ q`)));; (* `p` *)
 
 
 (* ========================================================================= *)
 (* 6. Abstractions and quantifiers                                           *)
 (* ========================================================================= *)
 
-fst (dest_comb `!x. x=x`);;
-snd (dest_comb `!x. x=x`);;
+fst (dest_comb `!x. x=x`);; (* `(!)` *)
+snd (dest_comb `!x. x=x`);; (* `\x. x = x` *)
 
-subst [`1`,`x:num`; `2`,`a:num`] `\x. x + a`;;
-subst [`1`,`x:num`; `2`,`a:num`] `(\x. x + a) x`;;
+subst [`1`,`x:num`; `2`,`a:num`] `\x. x + a`;; (* `\x. x + 2` *)
+subst [`1`,`x:num`; `2`,`a:num`] `(\x. x + a) x`;; (*  `(\x. x + 2) 1`  *)
 
-INST [`1`,`x:num`; `2`,`a:num`] (ARITH_RULE `!x. x + a = a + x`);;
-INST [`1`,`x:num`] (REFL `x:num`);;
-INST [`1`,`x:num`] (GEN `x:num` (REFL `x:num`));;
-INST [`1`,`x:num`] (GEN `x` (REFL `x:num`));;
-
-INST [`1`,`x:num`] (SPEC `x:num` ADD_ASSOC);;
-
+INST [`1`,`x:num`; `2`,`a:num`] (ARITH_RULE `!x. x + a = a + x`);; (* |- !x. x + 2 = 2 + x *)
+INST [`1`,`x:num`] (REFL `x:num`);; (*  |- 1 = 1    *)
+INST [`1`,`x:num`] (GEN `x:num` (REFL `x:num`));; (* |- !x. x = x  *)
+INST [`1`,`x:num`] (GEN `x` (REFL `x:num`));; (* !x. 1 = 1, `x` gets associated an invented type variable  *)
+SPEC `x:num` ADD_ASSOC;; (*  |- !n p. x + n + p = (x + n) + p *)
+INST [`1`,`x:num`] (SPEC `x:num` ADD_ASSOC);; (* |- !n p. 1 + n + p = (1 + n) + p  *) 
 (* Osservare la rinominazione n -> n' nei casi seguenti. *)
-SPEC `n:num` ADD_ASSOC;;
-INST [`1`,`n:num`] (SPEC `n:num` ADD_ASSOC);;
+SPEC `n:num` ADD_ASSOC;; (* |- !n' p. n + n' + p = (n + n') + p   *)
+INST [`1`,`n:num`] (SPEC `n:num` ADD_ASSOC);; (*  |- !n' p. 1 + n' + p = (1 + n') + p *)
 
 (* ========================================================================= *)
 (* 7. Conversions and rewriting                                              *)
 (* ========================================================================= *)
 
+BETA `(\y. x + y) y`;;
 BETA_CONV `(\y. x + y) y`;;
 BETA_CONV `(\x. x + y) y`;;
-BETA_CONV `(\x y. x + y) y`;;
-BETA_CONV `\x. (\y. x + y) 3`;;
-(ABS_CONV BETA_CONV) `\x. (\y. x + y) 3`;;
+BETA_CONV `(\x y. x + y) y`;; (*  |- (\x y. x + y) y = (\y'. y + y')  *)
+BETA_CONV `\x. (\y. x + y) 3`;; (* not a beta redex, ie not a combination *)
+(ABS_CONV BETA_CONV) `\x. (\y. x + y) 3`;; (* |- (\x. (\y. x + y) 3) = (\x. x + 3) *)
 
-MP (ARITH_RULE `x=0 ==> x >= 0`) (ASSUME `x = 0`);;
-MATCH_MP (ARITH_RULE `x=0 ==> x >= 0`) (ASSUME `x = 0`);;
-MATCH_MP (ARITH_RULE `y=0 ==> y >= 0`) (ASSUME `x EXP 2 = 0`);;
+MP (ARITH_RULE `x=0 ==> x >= 0`) (ASSUME `x = 0`);;         (*  x = 0 |- x >= 0 *)
+MATCH_MP (ARITH_RULE `x=0 ==> x >= 0`) (ASSUME `x = 0`);;       (*  x = 0 |- x >= 0 *)
+MATCH_MP (ARITH_RULE `y=0 ==> y >= 0`) (ASSUME `x EXP 2 = 0`);; (*  x EXP 2 = 0 |- x EXP 2 >= 0, by matching `y` to ` x EXP 2 `   *)
 MATCH_MP (ARITH_RULE `!x. x=0 ==> x >= 0`) (ASSUME `x = 0`);;
-MP (ARITH_RULE `!y. y = 0 ==> y >= 0`) (ASSUME `x = 0`);;
+MP (ARITH_RULE `!y. y = 0 ==> y >= 0`) (ASSUME `x = 0`);; (* MP doesn't match universally quantified variables *)
 
 (* ------------------------------------------------------------------------- *)
 (* Dimostrare il teorema                                                     *)
 (* |- 1 + (\y. f y) z = 1 + f z                                              *)
 (* (usare BETA_CONV con uno dei conversionals applicati al primo membro.)    *)
 (* ------------------------------------------------------------------------- *)
+RAND_CONV BETA_CONV `1 + (\y. f y) z`
 
 (* ------------------------------------------------------------------------- *)
 (* Dimostrare il teorema                                                     *)
 (* |- x + y + z = z + y + x;;                                                *)
 (* usando ADD_SYM e le conversioni (e senza usare ARITH_RULE).               *)
 (* ------------------------------------------------------------------------- *)
+let SWAP_FIRST_THIRD_AUGENDS_CONV = 
+    let swap_in_triple_sum term = 
+        let applied_operator, second_operand = dest_comb term in 
+        let first_operator = rand applied_operator in 
+        SPECL [first_operator; second_operand]  ADD_SYM 
+    in let second_step term =  
+        let y_plus_z_plus_operator, _ = dest_comb term in 
+        let y_plus_z_tm = rand y_plus_z_plus_operator in 
+        let z_plus_y_th = SPECL [rand (rator y_plus_z_tm); rand y_plus_z_tm]  ADD_SYM in
+        MK_COMB (MK_COMB (REFL `(+):num->num->num`, z_plus_y_th), REFL `x:num`) 
+    in let ADD_ASSOC_SYM = GSYM ADD_ASSOC
+    in let third_step term = SPECL [rand (rator (rand (rator term))); 
+                                    rand (rand (rator term)); 
+                                    rand term] ADD_ASSOC_SYM
+    in (REFL THENC swap_in_triple_sum THENC second_step THENC third_step);; 
+
+SWAP_FIRST_THIRD_AUGENDS_CONV `x + y + z`;;
 
 (* ------------------------------------------------------------------------- *)
 (* Dimostrare il teorema                                                     *)
 (* |- 2 EXP (2 EXP (2 EXP 2)) = 65536                                        *)
 (* usando NUM_EXP_CONV (senza usare ARITH_RULE, NUM_REDUCE_CONV) .           *)
 (* ------------------------------------------------------------------------- *)
+ (((RAND_CONV o RAND_CONV) NUM_EXP_CONV) 
+    THENC (RAND_CONV NUM_EXP_CONV) 
+    THENC NUM_EXP_CONV) `2 EXP (2 EXP (2 EXP 2))`;;
+
+(*
+ the following is simpler and ones not so different from the others since
+ no one application fo NUM_EXP_CONV doesn't create a new term containing EXP itself
+ *)
+DEPTH_CONV NUM_EXP_CONV `2 EXP (2 EXP (2 EXP 2))`;;
+REDEPTH_CONV NUM_EXP_CONV `2 EXP (2 EXP (2 EXP 2))`;;
+TOP_DEPTH_CONV NUM_EXP_CONV `2 EXP (2 EXP (2 EXP 2))`;;
 
 (* ------------------------------------------------------------------------- *)
 (* Dimostrare il teorema                                                     *)
@@ -207,6 +257,12 @@ MP (ARITH_RULE `!y. y = 0 ==> y >= 0`) (ASSUME `x = 0`);;
 (* calcolo.  Cercare una dimostrazione computazionalmente efficiente usando  *)
 (* il teorema EXP.                                                           *)
 (* ------------------------------------------------------------------------- *)
+let EXP_ZERO_CONV term = 
+    let case_m_exp_zero_th = fst (CONJ_PAIR EXP) in 
+    let m_tm = rand (rator term) in 
+    let spec_EXP_th = SPEC m_tm case_m_exp_zero_th in spec_EXP_th;;
+
+EXP_ZERO_CONV `2 EXP (2 EXP (2 EXP (2 EXP 2))) EXP 0`;; 
 
 (* ------------------------------------------------------------------------- *)
 (* Qual e' il risultato dei seguenti comandi?                                *)
