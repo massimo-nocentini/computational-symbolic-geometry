@@ -482,6 +482,9 @@ let SUM_ONE_UPTO_N_GREATER_THAN_N =
 let PARI = new_definition `!n. PARI n <=> (?m. n = 2*m)`;;
 let DISPARI = new_definition `!n. DISPARI n <=> (?m. n = SUC (2*m))`;;
 
+let PARI_CONV = REWR_CONV PARI;;
+let DISPARI_CONV = REWR_CONV DISPARI;;
+
 (* Zero e' pari *)
 let ZERO_IS_PARI = 
     prove (`PARI 0`, 
@@ -498,16 +501,49 @@ let ZERO_IS_NOT_DISPARI =
 
 let N_PARI_IMP_SUC_N_DISPARI = 
     prove (` !n. PARI n ==> DISPARI (SUC n)`,
-        REWRITE_TAC [PARI; DISPARI; ARITH]
-        GEN_TAC
-        DISCH_TAC
-        MATCH_MP_TAC num_INDUCTION
-        INDUCT_TAC
-            DISCH_TAC
-            EXISTS_TAC `0`
-            ARITH_TAC
+        REWRITE_TAC [PARI; DISPARI]
+        THEN INDUCT_TAC
+        THENL [   
+            DISCH_TAC THEN (EXISTS_TAC `0`) THEN ARITH_TAC; 
+            DISCH_TAC THEN (REWRITE_TAC [SUC_INJ]) THEN (ASM_REWRITE_TAC []) ]);;
 
-            DISCH_TAC
+let N_DISPARI_IMP_SUC_N_PARI = 
+    prove (` !n. DISPARI n ==> PARI (SUC n)`,
+        REWRITE_TAC [PARI; DISPARI]
+        THEN INDUCT_TAC
+        THENL [   
+            ARITH_TAC; 
+            (REWRITE_TAC [SUC_INJ; ADD1]) 
+            THEN DISCH_TAC 
+            EXISTS_TAC `(n DIV 2) + 1`
+REWRITE_TAC [LEFT_ADD_DISTRIB;ADD_AC;MULT_2 ]
+NUM_REDUCE_TAC
+CONV_TAC (RAND_CONV (REWR_CONV ADD_ASSOC))
+MATCH_MP_TAC (ARITH_RULE `!n m. n = m  ==> n+2 = m+2`)
+(* the following can be factored out in order to prove `n = n DIV 2 + n DIV 2` *)
+CONV_TAC (RAND_CONV (REWR_CONV (GSYM MULT_2)))
+(* till here steps are correct, but I can't close the proof *)
+ASSUME_TAC (ARITH_RULE `~(2 = 0)`)
+FIRST_X_ASSUM (MP_TAC o (MP (DISCH `~(2 = 0)` (SYM (UNDISCH (SPECL [`2`;`n:num`] DIV_MULT))))))
+DISCH_TAC
+ASM_REWRITE_TAC []
+
+
+
+CONJ_TAC
+g `m * n DIV r = (m * n) DIV r`;;
+STRIP_ASSUME_TAC MULT_CLAUSES
+
+REWRITE_TAC[DIVISION]
+(* DIV_MULT is an implication *)
+`!n m. n * (m DIV n) = m`
+dest_comb `3+4 DIV 2`
+REWR_CONV ADD_ASSOC `(a+b) + ((c + d) + e) + f + g + h`;;
+REWR_CONV ADD_ASSOC `((a + b) + (c + d) + e) + f + g + h`;;
+REWR_CONV ADD_ASSOC `(((a + b) + (c + d) + e) + f) + g + h`;;
+(* the following causes error, since ADD_ASSOC cannot be applied *)
+REWR_CONV ADD_ASSOC `((((a + b) + (c + d) + e) + f) + g) + h`;; 
+            
 (* ========================================================================= *)
 (* 9. HOL number systems                                                     *)
 (* ========================================================================= *)
