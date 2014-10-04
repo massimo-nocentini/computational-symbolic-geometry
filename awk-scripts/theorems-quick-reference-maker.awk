@@ -16,7 +16,7 @@
 # about OCaml P4 precessor.
 #/Camlp5/ { next }
 
-/^val \w+ : thm =$/ { splitted = 1 ; print }
-/^val \w+ : thm = / { splitted = 0 ; print }
+/^val \w+'* : thm =$/ { splitted = 1 ; print }
+/^val \w+'* : thm = / { splitted = 0 ; print }
 
 splitted == 1 && $0 ~ /^\s+/ { print }

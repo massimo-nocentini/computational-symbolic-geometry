@@ -550,13 +550,16 @@ val MOD_MOD_EXP_MIN : thm =
   |- !x p m n. ~(p = 0) ==> x MOD p EXP m MOD p EXP n = x MOD p EXP MIN m n
 val PRE_ELIM_THM : thm =
   |- P (PRE n) <=> (!m. n = SUC m \/ m = 0 /\ n = 0 ==> P m)
+val PRE_ELIM_THM' : thm =
   |- P (PRE n) <=> (?m. (n = SUC m \/ m = 0 /\ n = 0) /\ P m)
 val SUB_ELIM_THM : thm =
   |- P (a - b) <=> (!d. a = b + d \/ a < b /\ d = 0 ==> P d)
+val SUB_ELIM_THM' : thm =
   |- P (a - b) <=> (?d. (a = b + d \/ a < b /\ d = 0) /\ P d)
 val DIVMOD_ELIM_THM : thm =
   |- P (m DIV n) (m MOD n) <=>
      (!q r. n = 0 /\ q = 0 /\ r = m \/ m = q * n + r /\ r < n ==> P q r)
+val DIVMOD_ELIM_THM' : thm =
   |- P (m DIV n) (m MOD n) <=>
      (?q r. (n = 0 /\ q = 0 /\ r = m \/ m = q * n + r /\ r < n) /\ P q r)
 val minimal : thm = |- !P. (minimal) P = (@n. P n /\ (!m. m < n ==> ~P m))
@@ -4759,6 +4762,7 @@ val SUPERADMISSIBLE_MATCH_GUARDED_PATTERN : thm =
               ==> (!y. y << arg a t ==> y << s a))
          ==> superadmissible (<<) p s
              (\f x. match e x with pat t when q x t -> f (arg x t))
+val WF_REC_TAIL_GENERAL' : thm =
   |- !P G H H'.
          WF (<<) /\
          (!f g x.
@@ -4781,6 +4785,7 @@ val WF_REC_CASES : thm =
                       (!f a. t f a = (if P f a then f (G f a) else H f a)))
          clauses
          ==> (?f. !x. f x = CASEWISE clauses f x)
+val WF_REC_CASES' : thm =
   |- !(<<) clauses.
          WF (<<) /\ ALL (\(s,t). tailadmissible (<<) (\f a. T) s t) clauses
          ==> (?f. !x. f x = CASEWISE clauses f x)
