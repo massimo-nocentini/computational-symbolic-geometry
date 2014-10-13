@@ -506,32 +506,66 @@ let N_PARI_IMP_SUC_N_DISPARI =
             DISCH_TAC THEN (EXISTS_TAC `0`) THEN ARITH_TAC; 
             DISCH_TAC THEN (REWRITE_TAC [SUC_INJ]) THEN (ASM_REWRITE_TAC []) ]);;
 
+let _ = prove (`!n. (?q. n = 2 * q) ==> n = 2 * n DIV 2`,
+            GEN_TAC
+            THEN DISCH_TAC
+            THEN ASSUME_TAC (ARITH_RULE `~(2 = 0)`)
+            THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP MOD_EQ_0 th))))
+            THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP (CONJUNCT2 DIVISION_SIMP) (ASSUME `~(2 = 0)`)))))
+            THEN FIRST_X_ASSUM (fun th -> CONV_TAC (LAND_CONV (REWR_CONV th)))
+            THEN ASM_REWRITE_TAC[EQ_ADD_LCANCEL_0 ]
+            THEN FIRST_X_ASSUM (fun th -> REWRITE_TAC [SYM th])
+            THEN ONCE_REWRITE_TAC[MULT_SYM]
+            THEN ASM_REWRITE_TAC[]
+);;
+
 let N_DISPARI_IMP_SUC_N_PARI = 
     prove (` !n. DISPARI n ==> PARI (SUC n)`,
         REWRITE_TAC [PARI; DISPARI]
         THEN INDUCT_TAC
         THENL [   
+            (* base case *)
             ARITH_TAC; 
-            (REWRITE_TAC [SUC_INJ; ADD1]) 
+            (* inductive case *)
+            REWRITE_TAC [SUC_INJ; ADD1]
             THEN DISCH_TAC 
-            EXISTS_TAC `(n DIV 2) + 1`
-REWRITE_TAC [LEFT_ADD_DISTRIB;ADD_AC;MULT_2 ]
-NUM_REDUCE_TAC
-CONV_TAC (RAND_CONV (REWR_CONV ADD_ASSOC))
-MATCH_MP_TAC (ARITH_RULE `!n m. n = m  ==> n+2 = m+2`)
-(* the following can be factored out in order to prove `n = n DIV 2 + n DIV 2` *)
-CONV_TAC (RAND_CONV (REWR_CONV (GSYM MULT_2)))
-(* till here steps are correct, but I can't close the proof *)
-ASSUME_TAC (ARITH_RULE `~(2 = 0)`)
+            THEN EXISTS_TAC `(n DIV 2) + 1`
+            THEN REWRITE_TAC [LEFT_ADD_DISTRIB;ADD_AC;MULT_2 ]
+            THEN NUM_REDUCE_TAC
+            THEN CONV_TAC (RAND_CONV (REWR_CONV ADD_ASSOC))
+            (*
+             It should be better to use theorem EQ_ADD_RCANCEL, since it is more
+             general than proving with ARITH_RULE the hard way as we do next:
+             THEN MATCH_MP_TAC (GSYM EQ_ADD_RCANCEL) (*(ARITH_RULE `!n m. n = m  ==> n+2 = m+2`)*)
+             *)
+            THEN MATCH_MP_TAC (ARITH_RULE `!n m. n = m  ==> n+2 = m+2`)
+            THEN CONV_TAC (RAND_CONV (REWR_CONV (GSYM MULT_2)))
+            (* from here we can use the proven lemma *)
+            THEN ASSUME_TAC (ARITH_RULE `~(2 = 0)`)
+            THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP MOD_EQ_0 th))))
+            THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP (CONJUNCT2 DIVISION_SIMP) (ASSUME `~(2 = 0)`)))))
+            THEN FIRST_X_ASSUM (fun th -> CONV_TAC (LAND_CONV (REWR_CONV th)))
+            THEN ASM_REWRITE_TAC[EQ_ADD_LCANCEL_0 ]
+            THEN FIRST_X_ASSUM (fun th -> REWRITE_TAC [SYM th])
+            THEN ONCE_REWRITE_TAC[MULT_SYM]
+            THEN ASM_REWRITE_TAC[]
+            ]);;
+
+
+
+
+let EVEN_MOD = prove
+ (`!n. EVEN(n) <=> (n MOD 2 = 0)`,
+  GEN_TAC THEN REWRITE_TAC[EVEN_EXISTS] THEN ONCE_REWRITE_TAC[MULT_SYM] THEN
+  MATCH_MP_TAC(GSYM MOD_EQ_0) THEN REWRITE_TAC[TWO; NOT_SUC]);;
+
+ASM_REWRITE_TAC[]
+
 FIRST_X_ASSUM (MP_TAC o (MP (DISCH `~(2 = 0)` (SYM (UNDISCH (SPECL [`2`;`n:num`] DIV_MULT))))))
 DISCH_TAC
 ASM_REWRITE_TAC []
 
 
-
-CONJ_TAC
-g `m * n DIV r = (m * n) DIV r`;;
-STRIP_ASSUME_TAC MULT_CLAUSES
 
 REWRITE_TAC[DIVISION]
 (* DIV_MULT is an implication *)
@@ -575,15 +609,79 @@ prove (`~(c = 0) ==> (a * b) DIV c = a * (b DIV c)`,
 
 CONV_TAC (RAND_CONV (REWR_CONV (GSYM MULT_ASSOC)))
 REWRITE_TAC [EQ_MULT_LCANCEL]
-DISJ2_TAC
+DISJ2_TAC 
+  (*FIRST_ASSUM (fun th -> STRIP_ASSUME_TAC (SYM (MATCH_MP (SPEC `b:num` (CONJUNCT1 DIVISION_SIMP)) th)))*)
+  FIRST_ASSUM (fun th -> STRIP_ASSUME_TAC ((MATCH_MP (SPEC `b:num` DIVISION) th)))
+  FIRST_ASSUM ((fun th -> GEN_REWRITE_TAC LAND_CONV [ th]) o check (is_eq o concl))
+  (* find something like ADD_ELIM... *)
+  ASM_REWRITE_TAC[]
+
+LAND_CONV
+(rand o rator) `b = r DIV c * c`
+
+  (* very similar theorem MULT_DIV_LE *)
+  
+  (SPECL [`b:num`; `c:num`] DIVISION)
+
 CONV_TAC (RAND_CONV (REWR_CONV (GSYM MULT_SYM)))
-FIRST_X_ASSUM (fun th -> REWRITE_TAC [SPEC `b:num` (GSYM (MATCH_MP DIV_MULT th (*(ASSUME `~(c = 0)`)*)))])
+FIRST_X_ASSUM (fun th -> ASSUME_TAC (SPEC `b:num` (GSYM (MATCH_MP DIV_MULT th (*(ASSUME `~(c = 0)`)*)))))
+
+prove ( `!a b c. ~(c = 0) ==> (a = b <=> a DIV c = b DIV c)`
+    REPEAT GEN_TAC
+    DISCH_TAC
+    EQ_TAC
+        DISCH_THEN (fun th -> REWRITE_TAC [th])
+
+
+GSYM REAL_NOT_LE
+ONCE_REWRITE_RULE[GSYM REAL_NOT_LE] (ASSUME `&0 < x * y`)
+ASM_REWRITE_TAC []
+FIRST_X_ASSUM (fun th -> CONV_TAC (LAND_CONV (REWR_CONV (SPEC `b:num` (GSYM (MATCH_MP DIV_MULT th (*(ASSUME `~(c = 0)`)*)))))))
+
+let trivial = prove
+    (`!x y:real. &0 < x * y ==> (&0 < x <=> &0 < y)`,
+     REPEAT GEN_TAC THEN MP_TAC(SPECL [`--x`; `y:real`] REAL_LE_MUL) THEN
+     MP_TAC(SPECL [`x:real`; `--y`] REAL_LE_MUL) THEN REAL_ARITH_TAC);;
+     type_of `(--)`
+
+ let trivial = prove
+     (`!x y:real. &0 < x * y ==> (&0 < x <=> &0 < y)`,
+     MATCH_MP_TAC REAL_WLOG_LE THEN CONJ_TAC THEN REPEAT GEN_TAC THEN
+     MP_TAC(SPECL [`--x`; `y:real`] REAL_LE_MUL) THEN REAL_ARITH_TAC);;
 
 
 
-
-BETA_TAC
-
+let NOT_DISPARI_THEN_PARI = prove (`!n. ~(DISPARI n) ==> PARI n`,
+        REWRITE_TAC [PARI; DISPARI]
+        THEN INDUCT_TAC
+        THENL [   
+            (* base case *)
+            DISCH_TAC
+            THEN EXISTS_TAC `0`
+            THEN ARITH_TAC;
+            (* inductive case *)
+            REWRITE_TAC [SUC_INJ; ADD1]
+            THEN DISCH_TAC 
+            THEN EXISTS_TAC `(n + 1) DIV 2`
+            THEN REWRITE_TAC [LEFT_ADD_DISTRIB;ADD_AC;MULT_2 ]
+            THEN NUM_REDUCE_TAC
+            THEN CONV_TAC (RAND_CONV (REWR_CONV ADD_ASSOC))
+            (*
+             It should be better to use theorem EQ_ADD_RCANCEL, since it is more
+             general than proving with ARITH_RULE the hard way as we do next:
+             THEN MATCH_MP_TAC (GSYM EQ_ADD_RCANCEL) (*(ARITH_RULE `!n m. n = m  ==> n+2 = m+2`)*)
+             *)
+            THEN MATCH_MP_TAC (ARITH_RULE `!n m. n = m  ==> n+2 = m+2`)
+            THEN CONV_TAC (RAND_CONV (REWR_CONV (GSYM MULT_2)))
+            THEN ASSUME_TAC (ARITH_RULE `~(2 = 0)`)
+            THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP MOD_EQ_0 th))))
+            THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP (CONJUNCT2 DIVISION_SIMP) (ASSUME `~(2 = 0)`)))))
+            THEN FIRST_X_ASSUM (fun th -> CONV_TAC (LAND_CONV (REWR_CONV th)))
+            THEN ASM_REWRITE_TAC[EQ_ADD_LCANCEL_0 ]
+            THEN FIRST_X_ASSUM (fun th -> REWRITE_TAC [SYM th])
+            THEN ONCE_REWRITE_TAC[MULT_SYM]
+            THEN ASM_REWRITE_TAC[]
+);;
 
 
 (* ========================================================================= *)

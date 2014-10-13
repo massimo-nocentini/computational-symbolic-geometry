@@ -68,7 +68,10 @@ endfunction
 function! ApplyVisualSelectionAsTactic() 
     let visual_selected_text = getline("'<")[getpos("'<")[2]-1:getpos("'>")[2]-1]
     let visual_selected_text = substitute(visual_selected_text, '`', '\\`', "g")
-    " echom visual_selected_text
+    let visual_selected_text = substitute(visual_selected_text, '^\s*THEN\s\+', "", "")
+    let visual_selected_text = substitute(visual_selected_text, '\s\+THEN\s*$', "", "")
+    let visual_selected_text = substitute(visual_selected_text, '\s*;\=\s*$', "", "")
+"    echom visual_selected_text
     echo system('echo "e ('.visual_selected_text.');;" > /tmp/hol_light')
 endfunction
 
