@@ -551,9 +551,10 @@ let EVEN_MOD = prove
   GEN_TAC THEN REWRITE_TAC[EVEN_EXISTS] THEN ONCE_REWRITE_TAC[MULT_SYM] THEN
   MATCH_MP_TAC(GSYM MOD_EQ_0) THEN REWRITE_TAC[TWO; NOT_SUC]);;
 
+let a = 4;;
 
-
-let NOT_DISPARI_THEN_PARI = prove (`!n. ~(DISPARI n) ==> PARI n`,
+let NOT_DISPARI_THEN_PARI = 
+    prove (`!n. ~(DISPARI n) ==> PARI n`,
         REWRITE_TAC [PARI; DISPARI]
         THEN INDUCT_TAC
         THENL [   
@@ -578,9 +579,15 @@ let NOT_DISPARI_THEN_PARI = prove (`!n. ~(DISPARI n) ==> PARI n`,
             THEN ASM_REWRITE_TAC [] (*[NOT_EVEN]*)
             THEN FIRST_X_ASSUM (fun delete_even_suc_imp_not_even -> ALL_TAC)
             THEN FIRST_X_ASSUM (fun delete_even_0 -> ALL_TAC)
-            THEN FIRST_X_ASSUM (fun not_exists_m_st_n_eq_2_times_m_th -> ACCEPT_TAC ((EQT_ELIM o SYM) (TRANS ((SYM o EQT_INTRO) not_exists_m_st_n_eq_2_times_m_th) (SYM ( MK_COMB (REFL `(~)`, SPEC_ALL EVEN_EXISTS))) )))
-]);;
-TRANS_TAC
+            THEN FIRST_X_ASSUM (
+                fun not_exists_m_st_n_eq_2_times_m_th -> 
+                    let sym_negated_even_exists_th = SYM ( MK_COMB (REFL `(~)`, SPEC_ALL EVEN_EXISTS)) in
+                    let introduce_T_for_equality = (SYM o EQT_INTRO) not_exists_m_st_n_eq_2_times_m_th in
+                    let trans_th =  TRANS introduce_T_for_equality sym_negated_even_exists_th in
+                    ACCEPT_TAC ((EQT_ELIM o SYM) trans_th))
+        ]
+    );;
+
 let ODD_MOD = prove
  (`!n. ODD(n) <=> (n MOD 2 = 1)`,
    GEN_TAC THEN REWRITE_TAC[GSYM NOT_EVEN; EVEN_MOD] THEN
