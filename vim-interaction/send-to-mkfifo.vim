@@ -70,6 +70,9 @@ function! ApplyVisualSelectionAsTactic()
     let visual_selected_text = substitute(visual_selected_text, '`', '\\`', "g")
     let visual_selected_text = substitute(visual_selected_text, '^\s*THEN\s\+', "", "")
     let visual_selected_text = substitute(visual_selected_text, '\s\+THEN\s*$', "", "")
+    " the following remove a trailing `;` when a line beloging to a list
+    " is evaluated as a whole. Maybe it should be interesting to add
+    " to the previous substitutions the handling of `THENL`, againg for tackling lists.
     let visual_selected_text = substitute(visual_selected_text, '\s*;\=\s*$', "", "")
 "    echom visual_selected_text
     echo system('echo "e ('.visual_selected_text.');;" > /tmp/hol_light')
