@@ -485,6 +485,15 @@ let DISPARI = new_definition `!n. DISPARI n <=> (?m. n = SUC (2*m))`;;
 let PARI_CONV = REWR_CONV PARI;;
 let DISPARI_CONV = REWR_CONV DISPARI;;
 
+(* the following one can be useful for linking with existing EVEN/ODD theorems *)
+let PARI_EVEN_LINK = 
+    let symmed_EVEN_EXISTS = (SYM o SPEC_ALL) EVEN_EXISTS in
+    TRANS (SPEC_ALL PARI) symmed_EVEN_EXISTS;;
+
+let DISPARI_ODD_LINK = 
+    let symmed_ODD_EXISTS = (SYM o SPEC_ALL) ODD_EXISTS in
+    TRANS (SPEC_ALL DISPARI) symmed_ODD_EXISTS;;
+
 let ZERO_IS_PARI = 
     prove (`PARI 0`, 
         (REWRITE_TAC [PARI])
@@ -494,6 +503,7 @@ let ZERO_IS_PARI =
 let ZERO_IS_NOT_DISPARI =
     prove (`~ DISPARI 0`,
         REWRITE_TAC [DISPARI]
+(*        THEN ARITH_TAC *)
         THEN STRIP_TAC
         THEN FIRST_X_ASSUM MP_TAC 
         THEN ARITH_TAC);;
@@ -510,6 +520,7 @@ let PARI_DIV_BY_2_CANCEL = prove (`!n. (?q. n = 2 * q) ==> n = 2 * n DIV 2`,
             GEN_TAC
             THEN DISCH_TAC
             THEN ASSUME_TAC (ARITH_RULE `~(2 = 0)`)
+(*            THEN  ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP MOD_EQ_0 (ARITH_RULE `~(2 = 0)`))))*)
             THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP MOD_EQ_0 th))))
             THEN FIRST_ASSUM (fun th -> ASSUME_TAC (SYM (SPEC `n:num` (MATCH_MP (CONJUNCT2 DIVISION_SIMP) (ASSUME `~(2 = 0)`)))))
             THEN FIRST_X_ASSUM (fun th -> CONV_TAC (LAND_CONV (REWR_CONV th)))
@@ -545,13 +556,11 @@ let N_DISPARI_IMP_SUC_N_PARI =
 
 
 
-
+(* to learn *)
 let EVEN_MOD = prove
  (`!n. EVEN(n) <=> (n MOD 2 = 0)`,
   GEN_TAC THEN REWRITE_TAC[EVEN_EXISTS] THEN ONCE_REWRITE_TAC[MULT_SYM] THEN
   MATCH_MP_TAC(GSYM MOD_EQ_0) THEN REWRITE_TAC[TWO; NOT_SUC]);;
-
-let a = 4;;
 
 let NOT_DISPARI_THEN_PARI = 
     prove (`!n. ~(DISPARI n) ==> PARI n`,
@@ -588,6 +597,7 @@ let NOT_DISPARI_THEN_PARI =
         ]
     );;
 
+(* to learn *)
 let ODD_MOD = prove
  (`!n. ODD(n) <=> (n MOD 2 = 1)`,
    GEN_TAC THEN REWRITE_TAC[GSYM NOT_EVEN; EVEN_MOD] THEN
@@ -595,6 +605,92 @@ let ODD_MOD = prove
         [SIMP_TAC[DIVISION; TWO; NOT_SUC]; ALL_TAC] THEN
           SPEC_TAC(`n MOD 2`,`n:num`) THEN
             REWRITE_TAC[TWO; ONE; LT] THEN MESON_TAC[NOT_SUC]);;
+
+let NOT_PARI_THEN_DISPARI = 
+    prove (`!n. ~(PARI n) ==> DISPARI n`,
+                GEN_TAC
+        THEN    REWRITE_TAC [PARI_EVEN_LINK; DISPARI]
+        THEN    STRIP_ASSUME_TAC (SPEC_ALL EVEN_EXISTS_LEMMA) (* sarebbe piu' corretto specializzare con n:num *)
+    );;
+
+
+
+(* Thm: Ogni numero e' pari o dispari.                                       *)
+let PARI_OR_DISPARI = 
+    prove (`!n. PARI n \/ DISPARI n`,
+                    INDUCT_TAC
+        THENL [
+            (* base case *)
+                    DISJ1_TAC
+            THEN    REWRITE_TAC [PARI]
+            THEN    EXISTS_TAC `0`
+            THEN    ARITH_TAC;
+            (* inductive case *)
+                    FIRST_X_ASSUM DISJ_CASES_TAC
+            THENL [
+                        DISJ2_TAC 
+                THEN    FIRST_ASSUM (ACCEPT_TAC o (MATCH_MP N_PARI_IMP_SUC_N_DISPARI));
+                        DISJ1_TAC 
+                THEN    FIRST_ASSUM (ACCEPT_TAC o (MATCH_MP N_DISPARI_IMP_SUC_N_PARI))
+            ] 
+        ]     
+    );;
+
+(* this little lemma can be used in the second part of the following proof *)
+let PARI_N_IMP_PARI_SUC_SUC_N = 
+    IMP_TRANS (SPEC_ALL N_PARI_IMP_SUC_N_DISPARI) (SPEC `SUC n`  N_DISPARI_IMP_SUC_N_PARI);;
+
+let DISPARI_N_IMP_DISPARI_SUC_SUC_N = 
+    IMP_TRANS (SPEC_ALL N_DISPARI_IMP_SUC_N_PARI) (SPEC `SUC n`  N_PARI_IMP_SUC_N_DISPARI);;
+
+let PARI_n_EQ_NOT_DISPARI_n = prove (`!n. PARI n <=> ~DISPARI n`,
+            GEN_TAC
+        THEN EQ_TAC
+        THENL [
+            REWRITE_TAC [PARI; DISPARI]
+            THEN SUBGOAL_THEN `!m m'. ~(2*m = SUC (2*m'))` (fun th -> MESON_TAC [th])
+            THEN INDUCT_TAC
+            THENL [
+                ARITH_TAC;
+                INDUCT_TAC
+                THENL [
+                    ARITH_TAC;
+                    REWRITE_TAC [ARITH_RULE `2 * SUC m = SUC (SUC (2 * m))`]
+                    THEN REWRITE_TAC [SUC_INJ]
+                    THEN ASM_REWRITE_TAC[]
+                ]
+            ];
+            (MATCH_ACCEPT_TAC NOT_DISPARI_THEN_PARI)
+        ]
+    );;
+
+(*
+ The following is an example to use searching
+ facilities given a generic theorem.
+ *)
+let _ = search [`SUC a = a`];;
+
+(* Thm: n+2 e' pari se e solo se n e' pari.                                  *)
+let SUC_SUC_N_PARI_IFF_N_PARI = 
+    prove (`!n. PARI (n+2) <=> PARI n`,
+        GEN_TAC
+        REWRITE_TAC [TWO; ADD_SUC; (GSYM ADD1)]
+        EQ_TAC
+        THENL [
+                CONV_TAC (fun pari_suc_suc_n_IMP_pari_n_tm -> 
+                    let ant, cons = dest_imp pari_suc_suc_n_IMP_pari_n_tm in
+                        SPECL [cons; ant] (GSYM CONTRAPOS_THM))
+            THEN DISCH_THEN (ASSUME_TAC o MATCH_MP NOT_PARI_THEN_DISPARI)
+            THEN FIRST_X_ASSUM (ASSUME_TAC o MATCH_MP DISPARI_N_IMP_DISPARI_SUC_SUC_N)
+            (* the following is not useful, instead
+                we should keep the assumption and use
+                it with the preceeding theorem. *)
+            STRIP_TAC
+        ]
+    );;
+
+(* Thm: n+2 e' dispari se e solo se n e' dispari.                            *)
+
 
 
 (* ========================================================================= *)

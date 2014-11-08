@@ -100,10 +100,13 @@ endfunction
 
 function! ApplyVisualSelectionAsTactic() range
     let visual_selected_text = GetVisualSelection()
-    let visual_selected_text = substitute(visual_selected_text, '\s\s\+', '', "g")
+    let visual_selected_text = substitute(visual_selected_text, '\s\s\+', " ", "g")
     let visual_selected_text = substitute(visual_selected_text, '`', '\\`', "g")
     let visual_selected_text = substitute(visual_selected_text, '^\s*THEN\s\+', "", "")
     let visual_selected_text = substitute(visual_selected_text, '\s\+THEN\s*$', "", "")
+    " the following is an attempt to handle THENL directly
+    "let visual_selected_text = substitute(visual_selected_text, '^\s*THENL\s*\[\(.*\)\]\s*$', "EVERY [\1])", "")
+    "let visual_selected_text = substitute(visual_selected_text, '^\s*THENL\s*\[', 'EVERY [', "")
     " the following remove a trailing `;` when a line beloging to a list
     " is evaluated as a whole. Maybe it should be interesting to add
     " to the previous substitutions the handling of `THENL`, againg for tackling lists.
@@ -114,7 +117,7 @@ function! ApplyVisualSelectionAsTactic() range
     " let end_selection_position = getpos("'>")
     let end_selection_position = line("'>")
     " echom "end line position:" . end_selection_position
-    let pos = setpos(".", [0, end_selection_position + 1, 1, 0])
+    " let pos = setpos(".", [0, end_selection_position + 1, 1, 0])
 endfunction
 
 "_________________________________________________________
