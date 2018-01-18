@@ -11,6 +11,9 @@
 " UTILITY FUNCTIONS
 " __________________________________________________________
   
+" Quick and dirty approach to load `fifo_queue` var declaration
+source ~/Developer/working-copies/logics/hol-light/mkfifo-sessions/current-session.vim
+
 function! GetVisualSelection() range
     " Why is this not a built-in Vim script function?!
     let [lnum1, col1] = getpos("'<")[1:2]
@@ -22,7 +25,6 @@ function! GetVisualSelection() range
     return join(lines, "\n")
 endfunction
 
-"___________________________________________________________
 
 " GENERAL EVALUATION
 " __________________________________________________________
@@ -32,7 +34,7 @@ function! EvaluateVisualSelection() range
     let visual_selected_text = substitute(visual_selected_text, '`', '\\`', "g")
     "let visual_selected_text = substitute(visual_selected_text, '\(;;\)*\s*$', '', "g")
     "echom visual_selected_text
-    echo system('echo "'.visual_selected_text.';;" > /tmp/hol_light')
+    echo system('echo "'.visual_selected_text.';;" > '.g:fifo_queue)
     let end_selection_position = line("'>")
     " echom "end line position:" . end_selection_position
     let pos = setpos(".", [0, end_selection_position + 1, 1, 0])
@@ -47,7 +49,7 @@ function! SendExpressionToFifoDevice() range
     " `c` for accepting matching at cursor position
     " `s` to set a mark ' at the previous location
     let end = search(';;\s*$', 'cs') 
-    echo system('sed -n '.start.','.end.'p '.expand('%').' > /tmp/hol_light')
+    echo system('sed -n '.start.','.end.'p '.expand('%').' > '.g:fifo_queue)
     let pos = setpos(".", [0, (end+1), 1, 0])
 endfunction
 
@@ -55,10 +57,8 @@ function! EvaluateWordUnderCursor() range
     let word_under_cursor = expand("<cword>")
     " in the following we wrap the word under cursor in order
     " to handle possibly infix operator
-    echo system('echo "let val_'.word_under_cursor.' = ('.word_under_cursor.');;" > /tmp/hol_light')
+    echo system('echo "let val_'.word_under_cursor.' = ('.word_under_cursor.');;" > '.g:fifo_queue)
 endfunction
-" __________________________________________________
-
 
 
 " HOL Light dedicated interaction
@@ -72,15 +72,15 @@ endfunction
 " the number of lines current selected, image the `undu`
 " function been called several times!
 function! UndoTacticApplication() range
-    echo system('echo "b();;" > /tmp/hol_light')
+    echo system('echo "b();;" > '.g:fifo_queue)
 endfunction
 
 function! AskHelpForObjectUnderCursor() range
-    echo system('echo "help \"'.expand("<cword>").'\";;" > /tmp/hol_light')
+    echo system('echo "help \"'.expand("<cword>").'\";;" > '.g:fifo_queue)
 endfunction
 
 function! PrintGoalStack() range
-    echo system('echo "let val_goalstack_ = p ();;" > /tmp/hol_light')
+    echo system('echo "let val_goalstack_ = p ();;" > '.g:fifo_queue)
 endfunction
 
 function! EvaluateVisualSelectionAsGoal() range
@@ -91,7 +91,7 @@ function! EvaluateVisualSelectionAsGoal() range
     " on \ (ie, we write \\) inside '...' literal string construction, which means 
     " that string concat operator maybe handle string not in their literal form,
     " otherwise a simpler '\`' would have been sufficient.
-    echo system('echo "g ('.visual_selected_text.');;" > /tmp/hol_light')
+    echo system('echo "g ('.visual_selected_text.');;" > '.g:fifo_queue)
 
     let end_selection_position = line("'>")
     " echom "end line position:" . end_selection_position
@@ -111,7 +111,7 @@ function! ApplyVisualSelectionAsTactic() range
     " is evaluated as a whole. Maybe it should be interesting to add
     " to the previous substitutions the handling of `THENL`, againg for tackling lists.
     let visual_selected_text = substitute(visual_selected_text, '\s*;\=\s*$', "", "")
-    echo system('echo "e ('.visual_selected_text.');;" > /tmp/hol_light')
+    echo system('echo "e ('.visual_selected_text.');;" > '.g:fifo_queue)
     " the following is a simple attempt to place the cursor
     " after the last selected line but it doesn't work
     " let end_selection_position = getpos("'>")
@@ -119,11 +119,6 @@ function! ApplyVisualSelectionAsTactic() range
     " echom "end line position:" . end_selection_position
     " let pos = setpos(".", [0, end_selection_position + 1, 1, 0])
 endfunction
-
-"_________________________________________________________
-
-
-
 
 
 " <F_> key bindings
@@ -137,4 +132,3 @@ endfunction
 :vmap <F7> :call ApplyVisualSelectionAsTactic()<CR>
 :nmap <F8> :call UndoTacticApplication()<CR>
 :nmap <F9> :call PrintGoalStack()<CR>
-" ________________________________________________________

@@ -1,3 +1,4 @@
 *~
 *.swp
 *.elc
+*.DS_Store
