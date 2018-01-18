@@ -60,6 +60,13 @@ function! EvaluateWordUnderCursor() range
     echo system('echo "let val_'.word_under_cursor.' = ('.word_under_cursor.');;" > '.g:fifo_queue)
 endfunction
 
+function! SendInterrupt()
+    echo system(g:interrupt_command)
+endfunction
+
+function! SendDirectoryDirectiveCWD()
+    echo system('echo "#directory \"'.getcwd().'\";;" > '.g:fifo_queue)
+endfunction
 
 " HOL Light dedicated interaction
 " __________________________________________________
@@ -132,3 +139,6 @@ endfunction
 :vmap <F7> :call ApplyVisualSelectionAsTactic()<CR>
 :nmap <F8> :call UndoTacticApplication()<CR>
 :nmap <F9> :call PrintGoalStack()<CR>
+:nmap <localleader>k :call SendInterrupt()<CR>
+:nmap <localleader>cwd :call SendDirectoryDirectiveCWD()<CR>
+
